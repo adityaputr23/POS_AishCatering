@@ -3,8 +3,8 @@
 // ==========================================================================
 
 const AishPOS = (() => {
-  // Master Catalog Data
-  const catalogData = [
+  // Master Catalog Data (Sync with AishStorage)
+  let catalogData = (typeof AishStorage !== 'undefined') ? AishStorage.getCatalog() : [
     {
       id: 'prasmanan-royal',
       name: 'Paket Prasmanan Royal Nusantara',
@@ -17,6 +17,7 @@ const AishPOS = (() => {
       badge2: 'Bisa Custom Lauk',
       minBadge: 'Min. 50 Pax',
       isStar: true,
+      isAvailable: true,
       description: 'Nasi Liwet Wangi, Rendang Daging Sapi Pilihan, Ayam Goreng Lengkuas, Sambal Goreng Ati Kentang, Sup Kimlo, Puding Pandan.',
       image: 'assets/images/prasmanan.jpg',
       defaultLauk: ['Nasi Liwet', 'Rendang Daging Sapi', 'Ayam Goreng Lengkuas', 'Sambal Grg Ati', 'Sup Kimlo', 'Puding Pandan'],
@@ -35,6 +36,7 @@ const AishPOS = (() => {
       badge2: 'Best Seller',
       minBadge: 'Min. 25 Pax',
       isStar: true,
+      isAvailable: true,
       description: 'Rendang Daging Sapi Otentik, Telur Balado Pedas Manis, Tumis Buncis Jagung Pipil, Sambal Ijo, Kerupuk Udang, Sendok Kayu.',
       image: 'assets/images/nasi_box.jpg',
       defaultLauk: ['Nasi Putih Pandan Wangi', 'Rendang Daging Sapi', 'Telur Balado', 'Tumis Buncis Jagung', 'Sambal Ijo'],
@@ -53,6 +55,7 @@ const AishPOS = (() => {
       badge2: 'Porsi Tetap (30 Pax)',
       minBadge: 'Paket Utuh',
       isStar: false,
+      isAvailable: true,
       description: 'Tumpeng Kuning Gurih 30 Pax, Ayam Bakar Bumbu Madu, Sambal Goreng Kentang Kering Tempe, Perkedel, Urap Sayur, Telur Balado.',
       image: 'assets/images/tumpeng.jpg',
       defaultLauk: ['Tumpeng Kuning Gurih', 'Ayam Bakar Madu', 'Kering Tempe Teri', 'Perkedel Kentang', 'Urap Sayur Segar'],
@@ -72,6 +75,7 @@ const AishPOS = (() => {
       minBadge: 'Min. 30 Pax',
       isStar: false,
       isThumb: true,
+      isAvailable: true,
       description: 'Lemper Ayam Bakar Daun, Risoles Smoked Beef Mayo, Kue Lapis Pandan Cokelat, Brownies Mini Fudgy, Air Mineral Cup.',
       image: 'assets/images/snack_box.jpg',
       defaultLauk: ['Lemper Ayam Bakar', 'Risoles Beef Mayo', 'Kue Lapis Pandan', 'Brownies Fudgy'],
@@ -90,6 +94,7 @@ const AishPOS = (() => {
       badge2: 'Free 4 Gubukan',
       minBadge: 'Min. 400 Pax',
       isStar: false,
+      isAvailable: true,
       description: 'Buffet Utama 500 Pax lengkap + 4 Gubukan Favorit (Kambing Guling, Zuppa Soup, Siomay Bandung, Es Doger), Dekorasi Meja VIP.',
       image: 'assets/images/wedding.jpg',
       defaultLauk: ['Nasi Putih & Nasi Goreng', 'Dendeng Balado Basah', 'Ayam Suwir Rica', 'Sup Pengantin', 'Salad Buah', 'Gubukan 4 Pilihan'],
@@ -109,6 +114,7 @@ const AishPOS = (() => {
       minBadge: '1 Ekor (~70 Porsi)',
       isStar: false,
       isFire: true,
+      isAvailable: true,
       description: '1 Ekor Kambing Muda Utuh empuk tanpa bau prengus, saus kecap pedas manis bawang merah cabe rawit, acar segar, lontong daun.',
       image: 'assets/images/kambing_guling.jpg',
       defaultLauk: ['Kambing Guling Utuh', 'Saus Kecap Rawit Tomat', 'Lontong Daun', 'Acar Segar Timun Nanas'],
@@ -125,15 +131,17 @@ const AishPOS = (() => {
     if (typeof AishStorage !== 'undefined') {
       eventsData = AishStorage.getEvents();
       kitchenOrders = AishStorage.getKitchenOrders();
+      catalogData = AishStorage.getCatalog();
     }
   }
 
-  // Active Transaction State
   // Active Transaction State
   let state = {
     activeView: 'pos',
     currentCategory: 'Semua Menu',
     searchQuery: '',
+    masterCatalogCategory: 'Semua Menu',
+    masterCatalogSearch: '',
     customer: {
       name: 'Hj. Nurlaila Fitri',
       phone: '0812-9843-2211',
@@ -414,8 +422,9 @@ const AishPOS = (() => {
     grid.innerHTML = filtered.map(item => {
       const inCart = (state.cart || []).find(c => c.id === item.id);
       const isCurrentInCart = !!inCart;
+      const isOutOfStock = item.isAvailable === false;
       return `
-        <div class="menu-card" data-id="${item.id}">
+        <div class="menu-card ${isOutOfStock ? 'out-of-stock' : ''}" data-id="${item.id}">
           <div class="menu-card-image-wrap">
             <img src="${item.image}" alt="${item.name}" loading="lazy" />
             <div class="menu-badge-overlay-left">
@@ -423,7 +432,7 @@ const AishPOS = (() => {
               ${item.badge2 ? `<span class="badge-tag badge-dark">${item.badge2}</span>` : ''}
             </div>
             <div class="menu-badge-overlay-right">
-              <span class="badge-min-pax">${item.minBadge}</span>
+              ${isOutOfStock ? '<span class="badge-min-pax" style="background:#fecaca; color:#991b1b;">Stok Habis</span>' : `<span class="badge-min-pax">${item.minBadge}</span>`}
             </div>
           </div>
           <div class="menu-card-body">
@@ -444,8 +453,8 @@ const AishPOS = (() => {
                   <span class="price-unit">${item.unit}</span>
                 </div>
               </div>
-              <button class="btn-select-menu ${isCurrentInCart ? 'added' : ''}" onclick="AishPOS.selectCatalogItem('${item.id}')">
-                ${isCurrentInCart ? `✓ ${inCart.pax} ${item.unit ? item.unit.replace('/', '') : 'pax'}` : '+ Pilih'}
+              <button class="btn-select-menu ${isOutOfStock ? 'disabled-stock' : (isCurrentInCart ? 'added' : '')}" ${isOutOfStock ? 'disabled' : ''} onclick="AishPOS.selectCatalogItem('${item.id}')">
+                ${isOutOfStock ? '🚫 Stok Habis' : (isCurrentInCart ? `✓ ${inCart.pax} ${item.unit ? item.unit.replace('/', '') : 'pax'}` : '+ Pilih')}
               </button>
             </div>
           </div>
@@ -578,6 +587,74 @@ const AishPOS = (() => {
     }
   };
 
+  // =========================================================
+  // Master Catalog Table Renderer (Admin Panel)
+  // =========================================================
+  const renderMasterCatalog = () => {
+    const tbody = document.getElementById('masterCatalogTableBody');
+    if (!tbody) return;
+
+    const user = (typeof AishAuth !== 'undefined') ? AishAuth.getCurrentUser() : null;
+    const isAdmin = user && user.role === 'admin';
+
+    // Hide/show add button based on role
+    const btnAdd = document.getElementById('btnAddNewMenu');
+    if (btnAdd) btnAdd.style.display = isAdmin ? 'flex' : 'none';
+
+    // Filter by category and search
+    const filtered = catalogData.filter(item => {
+      const matchCat = (state.masterCatalogCategory === 'Semua Menu') || (item.category === state.masterCatalogCategory);
+      const q = state.masterCatalogSearch.toLowerCase();
+      const matchSearch = !q || item.name.toLowerCase().includes(q) ||
+                          (item.description || '').toLowerCase().includes(q) ||
+                          (item.defaultLauk || []).join(' ').toLowerCase().includes(q);
+      return matchCat && matchSearch;
+    });
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#94a3b8; padding:2rem;">Tidak ada menu ditemukan.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = filtered.map(item => {
+      const statusClass = item.isAvailable !== false ? 'tersedia' : 'habis';
+      const statusText = item.isAvailable !== false ? 'Tersedia' : 'Stok Habis';
+      const laukList = (item.defaultLauk || []).join(', ') || '-';
+      const complementary = item.complementary ? `<div style="font-size:10.5px; color:#6366f1; margin-top:2px;">${item.complementary}</div>` : '';
+
+      const actionsHtml = isAdmin
+        ? `<div style="display:flex; gap:4px; flex-wrap:wrap;">
+            <button class="btn-action-outline" style="height:26px; padding:0 6px; font-size:11px;" onclick="AishPOS.openEditMenuModal('${item.id}')">✏️ Edit</button>
+            <button class="btn-action-outline" style="height:26px; padding:0 6px; font-size:11px;" onclick="AishPOS.toggleMenuAvailability('${item.id}')">${item.isAvailable !== false ? '🔴 Nonaktif' : '🟢 Aktifkan'}</button>
+            <button class="btn-action-outline" style="height:26px; padding:0 6px; font-size:11px; color:#b91c1c;" onclick="AishPOS.deleteCatalogMenu('${item.id}')">🗑️ Hapus</button>
+          </div>`
+        : `<span style="font-size:11px; color:#94a3b8;">Hanya Admin</span>`;
+
+      return `
+        <tr>
+          <td>
+            <strong style="font-size:13px;">${item.name}</strong>
+            ${item.categoryTag ? `<div style="font-size:10.5px; color:#64748b;">${item.categoryTag}</div>` : ''}
+          </td>
+          <td>${item.category}</td>
+          <td class="font-mono" style="font-weight:600;">${formatIDR(item.price)} <span style="font-size:11px; color:#64748b;">${item.unit || ''}</span></td>
+          <td class="font-mono">${item.minPax || '-'} Pax</td>
+          <td style="max-width:220px; font-size:12px;">
+            ${laukList}
+            ${complementary}
+          </td>
+          <td>
+            <span class="status-pill ${statusClass}">
+              <span class="status-dot"></span>
+              ${statusText}
+            </span>
+          </td>
+          <td>${actionsHtml}</td>
+        </tr>
+      `;
+    }).join('');
+  };
+
   // Public Actions
   return {
     init: () => {
@@ -665,6 +742,7 @@ const AishPOS = (() => {
       if (viewName === 'schedule') renderEventsTable();
       if (viewName === 'invoices') renderInvoicesTable();
       if (viewName === 'kitchen') renderKitchenDisplay();
+      if (viewName === 'catalog') renderMasterCatalog();
       if (viewName === 'staff') {
         const user = (typeof AishAuth !== 'undefined') ? AishAuth.getCurrentUser() : null;
         if (!user || user.role !== 'admin') {
@@ -681,6 +759,12 @@ const AishPOS = (() => {
     selectCatalogItem: (itemId) => {
       const item = catalogData.find(i => i.id === itemId);
       if (!item) return;
+
+      // Out-of-stock guard
+      if (item.isAvailable === false) {
+        showToast(`Menu "${item.name}" sedang tidak tersedia (Stok Habis). Hubungi admin untuk mengaktifkan kembali.`, 'warning');
+        return;
+      }
 
       const addPax = item.minPax && item.minPax > 1 ? item.minPax : 25;
       if (typeof AishCart !== 'undefined') {
@@ -1566,6 +1650,216 @@ const AishPOS = (() => {
 
       showToast('🔄 Data telah direset ke dataset demo bawaan.', 'info');
     },
+
+    // =========================================================
+    // Master Catalog CRUD Methods (Task 3 & 4)
+    // =========================================================
+
+    // Filter master catalog table
+    filterMasterCatalog: () => {
+      const searchEl = document.getElementById('masterCatalogSearch');
+      state.masterCatalogSearch = searchEl ? searchEl.value.trim() : '';
+      renderMasterCatalog();
+    },
+
+    // Set category filter for master catalog
+    setMasterCatalogCategory: (cat, el) => {
+      state.masterCatalogCategory = cat;
+      // Update active tab styling
+      document.querySelectorAll('[data-master-cat]').forEach(btn => btn.classList.remove('active'));
+      if (el) el.classList.add('active');
+      renderMasterCatalog();
+    },
+
+    // Open Add Menu modal
+    openAddMenuModal: () => {
+      const user = (typeof AishAuth !== 'undefined') ? AishAuth.getCurrentUser() : null;
+      if (!user || user.role !== 'admin') {
+        showToast('Hanya Administrator yang dapat menambah menu baru!', 'warning');
+        return;
+      }
+      const titleEl = document.getElementById('menuFormModalTitle');
+      if (titleEl) titleEl.textContent = 'Tambah Menu Catering Baru';
+
+      // Reset form fields
+      document.getElementById('menuFormId').value = '';
+      document.getElementById('menuFormName').value = '';
+      document.getElementById('menuFormCategory').value = 'Paket Prasmanan';
+      document.getElementById('menuFormCategoryTag').value = '';
+      document.getElementById('menuFormPrice').value = '';
+      document.getElementById('menuFormUnit').value = '/pax';
+      document.getElementById('menuFormMinPax').value = '25';
+      document.getElementById('menuFormDefaultLauk').value = '';
+      document.getElementById('menuFormComplementary').value = '';
+      document.getElementById('menuFormDescription').value = '';
+      document.getElementById('menuFormIsAvailable').checked = true;
+
+      document.getElementById('modalMenuForm').classList.add('active');
+    },
+
+    // Open Edit Menu modal (pre-filled)
+    openEditMenuModal: (itemId) => {
+      const user = (typeof AishAuth !== 'undefined') ? AishAuth.getCurrentUser() : null;
+      if (!user || user.role !== 'admin') {
+        showToast('Hanya Administrator yang dapat mengedit menu!', 'warning');
+        return;
+      }
+      const item = catalogData.find(i => i.id === itemId);
+      if (!item) {
+        showToast('Menu tidak ditemukan di database!', 'warning');
+        return;
+      }
+
+      const titleEl = document.getElementById('menuFormModalTitle');
+      if (titleEl) titleEl.textContent = `Edit: ${item.name}`;
+
+      document.getElementById('menuFormId').value = item.id;
+      document.getElementById('menuFormName').value = item.name || '';
+      document.getElementById('menuFormCategory').value = item.category || 'Paket Prasmanan';
+      document.getElementById('menuFormCategoryTag').value = item.categoryTag || '';
+      document.getElementById('menuFormPrice').value = item.price || '';
+      document.getElementById('menuFormUnit').value = item.unit || '/pax';
+      document.getElementById('menuFormMinPax').value = item.minPax || 25;
+      document.getElementById('menuFormDefaultLauk').value = (item.defaultLauk || []).join(', ');
+      document.getElementById('menuFormComplementary').value = item.complementary || '';
+      document.getElementById('menuFormDescription').value = item.description || '';
+      document.getElementById('menuFormIsAvailable').checked = item.isAvailable !== false;
+
+      document.getElementById('modalMenuForm').classList.add('active');
+    },
+
+    // Save menu form (Add or Update)
+    saveMenuForm: (e) => {
+      if (e && e.preventDefault) e.preventDefault();
+      const user = (typeof AishAuth !== 'undefined') ? AishAuth.getCurrentUser() : null;
+      if (!user || user.role !== 'admin') {
+        showToast('Hanya Administrator yang dapat menyimpan menu!', 'warning');
+        return;
+      }
+
+      const itemId = document.getElementById('menuFormId').value.trim();
+      const name = document.getElementById('menuFormName').value.trim();
+      const category = document.getElementById('menuFormCategory').value;
+      const categoryTag = document.getElementById('menuFormCategoryTag').value.trim();
+      const price = Number(document.getElementById('menuFormPrice').value) || 0;
+      const unit = document.getElementById('menuFormUnit').value;
+      const minPax = Number(document.getElementById('menuFormMinPax').value) || 1;
+      const defaultLaukStr = document.getElementById('menuFormDefaultLauk').value.trim();
+      const defaultLauk = defaultLaukStr ? defaultLaukStr.split(',').map(s => s.trim()).filter(Boolean) : [];
+      const complementary = document.getElementById('menuFormComplementary').value.trim();
+      const description = document.getElementById('menuFormDescription').value.trim();
+      const isAvailable = document.getElementById('menuFormIsAvailable').checked;
+
+      if (!name) {
+        showToast('Nama menu tidak boleh kosong!', 'warning');
+        return;
+      }
+      if (price <= 0) {
+        showToast('Harga menu harus lebih dari Rp 0!', 'warning');
+        return;
+      }
+
+      const itemData = {
+        name,
+        category,
+        categoryTag: categoryTag || category,
+        price,
+        unit,
+        minPax,
+        badge1: categoryTag || category,
+        badge2: '',
+        minBadge: `Min. ${minPax} Pax`,
+        isStar: false,
+        isAvailable,
+        description,
+        image: 'assets/images/default_menu.jpg',
+        defaultLauk,
+        notes: '',
+        complementary
+      };
+
+      // If editing, preserve the id and existing image/badges
+      if (itemId) {
+        itemData.id = itemId;
+        const existing = catalogData.find(i => i.id === itemId);
+        if (existing) {
+          itemData.image = existing.image || itemData.image;
+          itemData.badge1 = existing.badge1 || itemData.badge1;
+          itemData.badge2 = existing.badge2 || itemData.badge2;
+          itemData.isStar = existing.isStar || false;
+          itemData.isThumb = existing.isThumb || false;
+          itemData.isFire = existing.isFire || false;
+          itemData.notes = existing.notes || '';
+        }
+      }
+
+      if (typeof AishStorage !== 'undefined') {
+        AishStorage.saveCatalogItem(itemData);
+      }
+
+      // Sync state
+      refreshStorageState();
+      renderMasterCatalog();
+      renderCatalog();
+
+      document.getElementById('modalMenuForm').classList.remove('active');
+      showToast(`Menu "${name}" berhasil ${itemId ? 'diperbarui' : 'ditambahkan'}! 🍱`);
+    },
+
+    // Delete catalog menu
+    deleteCatalogMenu: (itemId) => {
+      const user = (typeof AishAuth !== 'undefined') ? AishAuth.getCurrentUser() : null;
+      if (!user || user.role !== 'admin') {
+        showToast('Hanya Administrator yang dapat menghapus menu!', 'warning');
+        return;
+      }
+      const item = catalogData.find(i => i.id === itemId);
+      if (!item) return;
+
+      const confirmed = confirm(
+        `⚠️ Hapus Menu: "${item.name}"\n\n` +
+        `Harga: ${formatIDR(item.price)} ${item.unit}\n` +
+        `Kategori: ${item.category}\n\n` +
+        'Menu yang dihapus tidak dapat dikembalikan. Lanjutkan?'
+      );
+      if (!confirmed) return;
+
+      if (typeof AishStorage !== 'undefined') {
+        AishStorage.deleteCatalogItem(itemId);
+      }
+
+      // Remove from cart if present
+      state.cart = (state.cart || []).filter(c => c.id !== itemId);
+
+      refreshStorageState();
+      renderMasterCatalog();
+      renderCatalog();
+      renderCart();
+      showToast(`Menu "${item.name}" berhasil dihapus dari katalog.`, 'info');
+    },
+
+    // Toggle menu availability
+    toggleMenuAvailability: (itemId) => {
+      const user = (typeof AishAuth !== 'undefined') ? AishAuth.getCurrentUser() : null;
+      if (!user || user.role !== 'admin') {
+        showToast('Hanya Administrator yang dapat mengubah status ketersediaan menu!', 'warning');
+        return;
+      }
+
+      if (typeof AishStorage !== 'undefined') {
+        const updated = AishStorage.toggleCatalogAvailability(itemId);
+        if (updated) {
+          refreshStorageState();
+          renderMasterCatalog();
+          renderCatalog();
+          const statusText = updated.isAvailable ? 'Tersedia ✅' : 'Stok Habis 🔴';
+          showToast(`Status "${updated.name}" diubah menjadi: ${statusText}`);
+        }
+      }
+    },
+
+    // Expose renderMasterCatalog for external calls
+    renderMasterCatalog: () => renderMasterCatalog(),
 
     // Public Toast Trigger
     showToast: (opts, type) => showToast(opts, type)

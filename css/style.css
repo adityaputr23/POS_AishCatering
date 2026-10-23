@@ -1796,6 +1796,27 @@ input, select, textarea {
 }
 .status-pill.habis .status-dot { background-color: #94a3b8; }
 
+/* Out-of-Stock Menu Card */
+.menu-card.out-of-stock {
+  opacity: 0.55;
+  filter: grayscale(40%);
+  pointer-events: auto;
+}
+.menu-card.out-of-stock .menu-card-image-wrap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.15);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+.btn-select-menu.disabled-stock {
+  background: #e2e8f0 !important;
+  color: #94a3b8 !important;
+  border-color: #cbd5e1 !important;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 /* Kitchen KDS Columns */
 .kds-board {
   display: grid;
