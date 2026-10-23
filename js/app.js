@@ -462,15 +462,19 @@ const AishPOS = (() => {
     kirimCol.innerHTML = kitchenOrders.filter(o => o.stage === 'kirim').map(renderCard).join('') || '<div style="color: #94a3b8; font-size: 12px; padding: 1rem; text-align: center;">Tidak ada jadwal kirim langsung</div>';
   };
 
-  // Toast notification
+  // Modern Floating Toast Notification Engine Integration
   const showToast = (message, type = 'success') => {
-    const toast = document.getElementById('posToast');
-    if (!toast) return;
-    toast.textContent = message;
-    toast.className = `toast-notification ${type} show`;
-    setTimeout(() => {
-      toast.classList.remove('show');
-    }, 3000);
+    if (typeof AishToast !== 'undefined') {
+      return AishToast.show(message, type);
+    }
+    const toast = document.getElementById('toastContainer') || document.getElementById('posToast');
+    if (toast) {
+      toast.textContent = typeof message === 'string' ? message : (message.message || '');
+      toast.className = `toast-notification ${type} show`;
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
   };
 
   // Public Actions
@@ -1350,7 +1354,10 @@ const AishPOS = (() => {
       AishPOS.updateBackupStats();
 
       showToast('🔄 Data telah direset ke dataset demo bawaan.', 'info');
-    }
+    },
+
+    // Public Toast Trigger
+    showToast: (opts, type) => showToast(opts, type)
   };
 })();
 
