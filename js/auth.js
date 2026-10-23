@@ -51,9 +51,17 @@ const AishAuth = (() => {
     }
   }
 
+  const getSessionStore = () => {
+    if (typeof sessionStorage !== 'undefined') return sessionStorage;
+    if (typeof localStorage !== 'undefined') return localStorage;
+    return null;
+  };
+
   function loadSession() {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY_SESSION);
+      const store = getSessionStore();
+      if (!store) return null;
+      const raw = store.getItem(STORAGE_KEY_SESSION);
       if (!raw) return null;
       return JSON.parse(raw);
     } catch (e) {
@@ -63,10 +71,15 @@ const AishAuth = (() => {
 
   function saveSession(user) {
     try {
+      const store = getSessionStore();
+      if (!store) return;
       if (!user) {
-        localStorage.removeItem(STORAGE_KEY_SESSION);
+        store.removeItem(STORAGE_KEY_SESSION);
+        if (typeof localStorage !== 'undefined') {
+          localStorage.removeItem(STORAGE_KEY_SESSION);
+        }
       } else {
-        localStorage.setItem(STORAGE_KEY_SESSION, JSON.stringify(user));
+        store.setItem(STORAGE_KEY_SESSION, JSON.stringify(user));
       }
     } catch (e) {}
   }
@@ -74,6 +87,12 @@ const AishAuth = (() => {
   return {
     init: () => {
       loadStaff();
+      // Pastikan sisa sesi persisten lama di localStorage dibersihkan agar aplikasi selalu meminta login saat fresh launch
+      try {
+        if (typeof localStorage !== 'undefined' && typeof sessionStorage !== 'undefined') {
+          localStorage.removeItem(STORAGE_KEY_SESSION);
+        }
+      } catch (e) {}
       currentSession = loadSession();
     },
 

@@ -7,8 +7,9 @@ echo        PROSES MEMBUAT FILE EXE AISH CATERING
 echo ====================================================
 echo.
 echo Sedang membungkus aplikasi menjadi file .exe mandiri...
-echo Mohon tunggu sebentar sampai selesai...
-echo.
+echo Menutup aplikasi kasir jika masih berjalan...
+taskkill /F /IM "Aish Catering POS.exe" >nul 2>&1
+timeout /t 1 /nobreak >nul
 
 call npm run build:exe
 

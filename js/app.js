@@ -1368,10 +1368,10 @@ const AishPOS = (() => {
         if (overlay) overlay.classList.add('active');
         if (shiftStatus) shiftStatus.textContent = 'Akses Terkunci • Menunggu Login';
         if (avatar) avatar.textContent = '--';
-        if (userName) userName.textContent = 'Belum Masuk';
-        if (userRole) userRole.textContent = 'Tamu';
-        if (dropdownName) dropdownName.textContent = 'Belum Masuk';
-        if (dropdownRole) dropdownRole.textContent = 'TAMU';
+        if (userName) userName.textContent = 'Akses Terkunci';
+        if (userRole) userRole.textContent = 'TERKUNCI';
+        if (dropdownName) dropdownName.textContent = 'Belum Login';
+        if (dropdownRole) dropdownRole.textContent = 'TERKUNCI';
         if (navStaffItem) navStaffItem.style.display = 'none';
         return;
       }
@@ -1451,17 +1451,41 @@ const AishPOS = (() => {
       AishPOS.handleLogin(new Event('submit'));
     },
 
-    // Logout & Lock POS
+    // Logout & Lock POS (Kunci Layar & Ganti Akun)
     handleLogout: () => {
       const wrapper = document.querySelector('.user-profile-wrapper');
       if (wrapper) wrapper.classList.remove('active');
 
-      if (confirm('Apakah Anda yakin ingin keluar / berganti shift kasir?')) {
+      if (confirm('Apakah Anda yakin ingin mengunci layar dan berganti akun/shift kasir?')) {
         if (typeof AishAuth !== 'undefined') {
           AishAuth.logout();
         }
+        const userEl = document.getElementById('loginUsername');
+        const passEl = document.getElementById('loginPassword');
+        const errEl = document.getElementById('loginErrorMsg');
+        if (userEl) userEl.value = '';
+        if (passEl) passEl.value = '';
+        if (errEl) {
+          errEl.textContent = '';
+          errEl.classList.remove('active');
+        }
+        AishPOS.switchView('pos');
         AishPOS.syncAuthUI();
-        showToast('Anda telah keluar dari sistem kasir.', 'info');
+        showToast('Sistem POS dikunci. Silakan login untuk bertugas kembali.', 'info');
+      }
+    },
+
+    // Tutup / Keluar Aplikasi POS (Electron desktop quit)
+    exitApp: () => {
+      const wrapper = document.querySelector('.user-profile-wrapper');
+      if (wrapper) wrapper.classList.remove('active');
+
+      if (confirm('Apakah Anda yakin ingin keluar dan menutup aplikasi POS Aish Catering?')) {
+        try {
+          window.close();
+        } catch (e) {
+          showToast('Silakan tutup jendela aplikasi untuk keluar.', 'info');
+        }
       }
     },
 
