@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aish Catering - Sistem Kasir & Operasional</title>
+  <meta name="description" content="Sistem Kasir & Operasional Catering Profesional Aish Catering. Mengelola pesanan prasmanan, nasi box, tumpeng, jadwal acara, DP, dan dapur.">
+  
+  <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- TOP APPLICATION HEADER -->
+    <header class="app-header">
+      <div class="header-left">
+        <a href="#" class="brand-badge" onclick="AishPOS.switchView('pos'); return false;">
+          <div class="brand-icon-box">
+            <span>🍲</span>
+          </div>
+          <div class="brand-text">
+            <h1>AISH CATERING</h1>
+            <span>SISTEM KASIR & OPERASIONAL</span>
+          </div>
+        </a>
+
+        <div class="branch-select-box">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+          <span>Cabang Jakarta Selatan - Kitchen 01</span>
+        </div>
+      </div>
+
+      <div class="header-center">
+        <div class="global-search-container">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="globalSearchInvoice" placeholder="Cari invoice (INV-...) atau nama..." autocomplete="off">
+        </div>
+      </div>
+
+      <div class="header-right">
+        <div class="shift-badge">
+          <span class="status-dot-pulse"></span>
+          <span id="headerShiftStatus">Shift Pagi: Ratna - Kasir Aktif</span>
+        </div>
+
+        <button class="btn-new-order" onclick="AishPOS.startNewOrder()">
+          <span>+</span>
+          <span>Pesanan Baru</span>
+        </button>
+
+        <button class="header-icon-btn" title="Notifikasi Dapur">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+          <span class="notif-badge"></span>
+        </button>
+
+        <div class="user-profile-wrapper">
+          <div class="user-profile" id="userProfileBtn" onclick="AishPOS.toggleUserDropdown()" title="Klik untuk menu akun">
+            <div class="avatar-circle" id="headerUserAvatar">RA</div>
+            <div class="user-profile-meta">
+              <span class="meta-name" id="headerUserName">Ratna</span>
+              <span class="meta-role" id="headerUserRole">Kasir</span>
+            </div>
+            <svg class="dropdown-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </div>
+          <div class="user-dropdown-menu" id="userDropdownMenu">
+            <div class="dropdown-user-info">
+              <div class="dropdown-name" id="dropdownStaffName">Ratna</div>
+              <div class="dropdown-role-badge" id="dropdownStaffRole">KASIR</div>
+            </div>
+            <div class="dropdown-divider"></div>
+            <button type="button" class="dropdown-item btn-logout" onclick="AishPOS.handleLogout()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+              <span>Keluar / Ganti Shift</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- 3-PANE PERSISTENT WORKSPACE GRID -->
+    <div class="workspace-grid">
+      
+      <!-- LEFT RAIL: Persistent Navigation (220px) -->
+      <aside class="left-rail">
+        <div>
+          <div class="nav-section-title">MENU OPERASIONAL</div>
+          <nav class="nav-menu">
+            <a href="#" class="nav-item active" data-view="pos" onclick="AishPOS.switchView('pos'); return false;">
+              <div class="nav-item-content">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                  <line x1="8" y1="21" x2="16" y2="21"></line>
+                  <line x1="12" y1="17" x2="12" y2="21"></line>
+                </svg>
+                <span>Kasir POS</span>
+              </div>
+              <span class="nav-badge-pill badge-live">Live</span>
+            </a>
+
+            <a href="#" class="nav-item" data-view="schedule" onclick="AishPOS.switchView('schedule'); return false;">
+              <div class="nav-item-content">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                <span>Jadwal & Acara</span>
+              </div>
+              <span class="nav-badge-pill badge-count">12 Acara</span>
+            </a>
+
+            <a href="#" class="nav-item" data-view="catalog" onclick="AishPOS.switchView('catalog'); return false;">
+              <div class="nav-item-content">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                  <path d="M2 17l10 5 10-5"></path>
+                  <path d="M2 12l10 5 10-5"></path>
+                </svg>
+                <span>Katalog Menu</span>
+              </div>
+            </a>
+
+            <a href="#" class="nav-item" data-view="invoices" onclick="AishPOS.switchView('invoices'); return false;">
+              <div class="nav-item-content">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                </svg>
+                <span>Invoice & DP</span>
+              </div>
+            </a>
+
+            <a href="#" class="nav-item" data-view="kitchen" onclick="AishPOS.switchView('kitchen'); return false;">
+              <div class="nav-item-content">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path>
+                </svg>
+                <span>Kitchen Display</span>
+              </div>
+              <span class="badge-dot-orange" title="Pesanan dapur aktif"></span>
+            </a>
+          </nav>
+        </div>
+
+        <div class="left-rail-footer">
+          <div class="kitchen-quick-stat">
+            <div class="stat-row">
+              <span class="stat-label">STATUS DAPUR</span>
+              <span class="stat-value ok">● Normal</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Pesanan Hari Ini</span>
+              <span class="stat-value">48 Order</span>
+            </div>
+          </div>
+
+          <button class="btn-help" onclick="alert('Pusat Bantuan Kasir POS Aish Catering: Silakan hubungi Supervisor Operasional di ext 104 atau WhatsApp 0812-9988-7766.');">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+            <span>Bantuan Kasir POS</span>
+          </button>
+        </div>
+      </aside>
+
+      <!-- CENTER CANVAS: Core Operational Area (Fluid) -->
+      <main class="center-canvas">
+        
+        <!-- ================= VIEW 1: KASIR POS ================= -->
+        <div id="view-pos" class="view-panel active">
+          
+          <!-- Top Catalog Header Row -->
+          <div class="catalog-header-row">
+            <div class="catalog-title-group">
+              <div class="catalog-icon-box">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                  <line x1="3" y1="6" x2="21" y2="6"></line>
+                  <path d="M16 10a4 4 0 0 1-8 0"></path>
+                </svg>
+              </div>
+              <div class="catalog-text">
+                <h2>
+                  Katalog Paket Catering
+                  <span class="sync-badge">Live Sync</span>
+                </h2>
+                <p>Pilih paket acara atau susun kustom menu prasmanan</p>
+              </div>
+            </div>
+
+            <div class="catalog-search-bar">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <input type="text" id="catalogSearchInput" placeholder="Cari lauk, paket wedding, tumpeng...">
+              <button class="action-icon" title="Scan SKU / Barcode">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 7V5a2 2 0 0 1 2-2h2"></path>
+                  <path d="M17 3h2a2 2 0 0 1 2 2v2"></path>
+                  <path d="M21 17v2a2 2 0 0 1-2 2h-2"></path>
+                  <path d="M7 21H5a2 2 0 0 1-2-2v-2"></path>
+                </svg>
+              </button>
+              <button class="action-icon" title="Filter Lanjutan">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="4" y1="21" x2="4" y2="14"></line>
+                  <line x1="4" y1="10" x2="4" y2="3"></line>
+                  <line x1="12" y1="21" x2="12" y2="12"></line>
+                  <line x1="12" y1="8" x2="12" y2="3"></line>
+                  <line x1="20" y1="21" x2="20" y2="16"></line>
+                  <line x1="20" y1="12" x2="20" y2="3"></line>
+                  <line x1="1" y1="14" x2="7" y2="14"></line>
+                  <line x1="9" y1="8" x2="15" y2="8"></line>
+                  <line x1="17" y1="16" x2="23" y2="16"></line>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Category Filter Tabs -->
+          <div class="category-filter-bar">
+            <button class="category-tab active" data-category="Semua Menu">
+              <span>🍽️ Semua Menu</span>
+            </button>
+            <button class="category-tab" data-category="Paket Prasmanan">
+              <span>🍲 Paket Prasmanan</span>
+            </button>
+            <button class="category-tab" data-category="Nasi Kotak / Bento">
+              <span>🍱 Nasi Kotak / Bento</span>
+            </button>
+            <button class="category-tab" data-category="Tumpeng">
+              <span>🗻 Tumpeng</span>
+            </button>
+            <button class="category-tab" data-category="Snack Box">
+              <span>🥐 Snack Box</span>
+            </button>
+            <button class="category-tab" data-category="Gubukan / Stall">
+              <span>🍢 Gubukan / Stall</span>
+            </button>
+          </div>
+
+          <!-- 3 KPI Metric Cards -->
+          <div class="kpi-row">
+            <div class="kpi-card">
+              <div class="kpi-icon kitchen">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"></path>
+                  <path d="M7 2v20"></path>
+                  <path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"></path>
+                </svg>
+              </div>
+              <div class="kpi-content">
+                <div class="kpi-label">Kapasitas Dapur Hari Ini</div>
+                <div class="kpi-value font-mono">
+                  1.850 / 2.500 <span class="unit">Pax</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-icon delivery">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="1" y="3" width="15" height="13"></rect>
+                  <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+                  <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                  <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                </svg>
+              </div>
+              <div class="kpi-content">
+                <div class="kpi-label">Slot Pengiriman Pagi-Siang</div>
+                <div class="kpi-value amber">Sisa 3 Armada</div>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-icon popular">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+              </div>
+              <div class="kpi-content">
+                <div class="kpi-label">Menu Terlaris Musim Ini</div>
+                <div class="kpi-value green" style="font-size: 15px;">Prasmanan Royal VIP</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Catalog Grid -->
+          <div class="menu-grid" id="catalogMenuGrid">
+            <!-- Dynamically populated from catalogData -->
+          </div>
+
+          <!-- Custom Dish & Food Tasting Bottom Banner -->
+          <div class="custom-dish-banner">
+            <div class="custom-banner-left">
+              <div class="custom-icon-box">
+                <span>📋</span>
+              </div>
+              <div class="custom-text">
+                <h4>Pelanggan Meminta Pergantian Menu Lauk?</h4>
+                <p>Klik tombol kustomisasi untuk menukar jenis sayuran, protein utama, atau menambah tester pack.</p>
+              </div>
+            </div>
+            <div class="custom-banner-actions">
+              <button class="btn-banner-light" onclick="AishPOS.openCustomLaukModal()">
+                + Tambah Lauk Ekstra
+              </button>
+              <button class="btn-banner-amber" onclick="AishPOS.openFoodTastingModal()">
+                Atur Food Tasting
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ================= VIEW 2: JADWAL & ACARA ================= -->
+        <div id="view-schedule" class="view-panel">
+          <div class="view-header">
+            <div class="view-header-title">
+              <h2>Jadwal & Acara Catering Mendatang</h2>
+              <p>Daftar reservasi catering, waktu dispatch armada, dan status operasional dapur.</p>
+            </div>
+            <button class="btn-new-order" onclick="AishPOS.startNewOrder()">
+              + Buat Jadwal Acara Baru
+            </button>
+          </div>
+
+          <div class="events-table-card">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>No Invoice</th>
+                  <th>Nama Pemesan</th>
+                  <th>Waktu Acara</th>
+                  <th>Lokasi / Venue</th>
+                  <th>Paket Acara</th>
+                  <th>Jumlah</th>
+                  <th>Total Biaya</th>
+                  <th>Status</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="eventsTableBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ================= VIEW 3: KATALOG LENGKAP ================= -->
+        <div id="view-catalog" class="view-panel">
+          <div class="view-header">
+            <div class="view-header-title">
+              <h2>Master Katalog Menu & Resep Catering</h2>
+              <p>Spesifikasi bahan, porsi minimum (Pax), standard operating procedures, dan variasi lauk.</p>
+            </div>
+          </div>
+
+          <div class="events-table-card" style="padding: 1.5rem;">
+            <p style="font-size: 13px; color: #475569; margin-bottom: 1rem;">
+              Setiap menu telah disesuaikan dengan resep otentik nusantara, menggunakan bahan premium bersertifikat Halal dan lolos uji higienitas BPOM.
+            </p>
+            <div class="menu-grid" style="grid-template-columns: repeat(3, 1fr);">
+              <!-- Will render catalog cards with details -->
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= VIEW 4: INVOICE & DP TRACKER ================= -->
+        <div id="view-invoices" class="view-panel">
+          <div class="view-header">
+            <div class="view-header-title">
+              <h2>Manajemen Invoice & Pelunasan DP</h2>
+              <p>Pantau pembayaran termin (DP 30%, DP 50%, dan Pelunasan) secara akurat.</p>
+            </div>
+          </div>
+
+          <div class="invoice-table-card">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>No Invoice</th>
+                  <th>Klien / Pemesan</th>
+                  <th>Paket & Pax</th>
+                  <th>Total Tagihan</th>
+                  <th>DP Terbayar</th>
+                  <th>Sisa Tagihan</th>
+                  <th>Status</th>
+                  <th>Nota / Cetak</th>
+                </tr>
+              </thead>
+              <tbody id="invoicesTableBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ================= VIEW 5: KITCHEN DISPLAY SYSTEM ================= -->
+        <div id="view-kitchen" class="view-panel">
+          <div class="view-header">
+            <div class="view-header-title">
+              <h2>Kitchen Display System (KDS) - Live Dispatch</h2>
+              <p>Pantau antrean produksi, proses memasak, dan kesiapan armada pengiriman logistik.</p>
+            </div>
+            <div style="font-size: 12px; font-weight: 700; color: #166534;" class="font-mono">
+              JAM DAPUR: 10:35:12 WIB
+            </div>
+          </div>
+
+          <div class="kds-board">
+            <div class="kds-column">
+              <div class="kds-column-header">
+                <span class="kds-column-title">⏳ Antrean Produksi</span>
+                <span class="nav-badge-pill badge-count">1</span>
+              </div>
+              <div class="kds-card-list" id="kdsColAntrean"></div>
+            </div>
+
+            <div class="kds-column">
+              <div class="kds-column-header">
+                <span class="kds-column-title">🍳 Sedang Dimasak</span>
+                <span class="nav-badge-pill badge-live">1</span>
+              </div>
+              <div class="kds-card-list" id="kdsColMasak"></div>
+            </div>
+
+            <div class="kds-column">
+              <div class="kds-column-header">
+                <span class="kds-column-title">🚚 Siap Kirim / Armada</span>
+                <span class="nav-badge-pill badge-count" style="background:#ffedd5; color:#c2410c;">1</span>
+              </div>
+              <div class="kds-card-list" id="kdsColKirim"></div>
+            </div>
+          </div>
+        </div>
+
+      </main>
+
+      <!-- RIGHT RAIL: Keranjang Pesanan Acara & Tender Slip (400px Fixed) -->
+      <aside class="right-rail">
+        <!-- Cart Top Header -->
+        <div class="cart-header">
+          <div class="cart-header-title">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <path d="M16 10a4 4 0 0 1-8 0"></path>
+            </svg>
+            <span>Keranjang Pesanan Acara</span>
+          </div>
+          <span class="invoice-code-tag" id="cartInvoiceTag">INV-2025/V/092</span>
+        </div>
+
+        <!-- Scrollable Cart Content -->
+        <div class="cart-body-scrollable">
+          
+          <!-- Event & Customer Info Card -->
+          <div class="event-info-card">
+            <div class="event-info-header">
+              <span class="event-info-label">DATA PEMESAN & LOKASI ACARA</span>
+              <button class="btn-edit-link" onclick="AishPOS.openCustomerModal()">
+                <span>✏️ Ubah</span>
+              </button>
+            </div>
+            
+            <div class="event-info-name">
+              <span id="cartCustomerName">Hj. Nurlaila Fitri</span>
+              <span class="phone" id="cartCustomerPhone">0812-9843-2211</span>
+            </div>
+
+            <div class="event-meta-line">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              <span id="cartEventTime">Sabtu, 24 Mei 2025 • 10:30 WIB</span>
+            </div>
+
+            <div class="event-meta-line">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+              <span id="cartEventVenue">Gedung Graha Mandiri Lt. 3 Ballroom, Jl. Imam Bonjol No.61, Menteng, Jakarta...</span>
+            </div>
+          </div>
+
+          <!-- Empty Cart State -->
+          <div class="cart-empty-card" id="cartEmptyCard" style="display: none;">
+            <div class="empty-cart-icon">🛒</div>
+            <h4>Keranjang Masih Kosong</h4>
+            <p>Silakan klik tombol <strong>+ Pilih</strong> pada katalog di sebelah kiri untuk memasukkan pesanan.</p>
+          </div>
+
+          <!-- Active Cart Item Card -->
+          <div class="cart-item-card" id="cartActiveItemCard">
+            <div class="cart-item-top">
+              <div>
+                <span class="cart-item-cat" id="cartItemCategory">PRASMANAN BUFFET</span>
+                <h4 class="cart-item-name" id="cartItemName">Paket Prasmanan Royal Nusantara</h4>
+                <span class="cart-item-unit-price" id="cartItemUnitPrice">Rp 65.000 / pax</span>
+              </div>
+              <button class="btn-remove-item" title="Hapus paket dari keranjang" onclick="AishPOS.removeCartItem()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+              </button>
+            </div>
+
+            <!-- Pax Stepper & Shortcut Chips -->
+            <div class="stepper-control-row">
+              <div class="pax-stepper">
+                <button class="stepper-btn" onclick="AishPOS.adjustPax(-1)" title="Kurangi 1 Porsi">−</button>
+                <div class="stepper-input-wrap">
+                  <input type="number" id="cartPaxInput" class="stepper-input" min="1" step="1" value="150" oninput="AishPOS.setPaxDirect(this.value)" title="Ketik jumlah porsi langsung">
+                  <span class="stepper-unit-label">Pax</span>
+                </div>
+                <button class="stepper-btn" onclick="AishPOS.adjustPax(1)" title="Tambah 1 Porsi">+</button>
+              </div>
+              <div class="stepper-shortcuts">
+                <button class="chip-stepper chip-satuan" onclick="AishPOS.setPaxDirect(1)" title="Pesan Satuan (1 Porsi)">1 Porsi</button>
+                <button class="chip-stepper" onclick="AishPOS.addPaxShortcut(5)" title="Tambah 5 porsi">+5</button>
+                <button class="chip-stepper" onclick="AishPOS.addPaxShortcut(10)" title="Tambah 10 porsi">+10</button>
+                <button class="chip-stepper" onclick="AishPOS.addPaxShortcut(25)" title="Tambah 25 porsi">+25</button>
+                <button class="chip-stepper" onclick="AishPOS.addPaxShortcut(50)" title="Tambah 50 porsi">+50</button>
+              </div>
+            </div>
+
+            <!-- Satuan / Eceran Notice Badge -->
+            <div id="cartSatuanNotice" class="satuan-notice-badge" style="display: none;">
+              <span>⚡</span>
+              <span><strong>Pesanan Satuan / Eceran:</strong> Bebas pesan mulai 1 porsi.</span>
+            </div>
+
+            <!-- Selected Dishes List -->
+            <div class="selected-dishes-box">
+              <div class="selected-dishes-label">Lauk & Sajian Terpilih:</div>
+              <div class="dishes-chips-list" id="cartDishesList">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+
+            <!-- Custom notes -->
+            <div class="cart-item-notes">
+              <span>🌾</span>
+              <span id="cartItemNotes">Sambal dipisah, tanpa MSG, sediakan 2 m...</span>
+            </div>
+
+            <!-- Item Subtotal -->
+            <div class="cart-item-subtotal-row">
+              <span style="color: #64748b;">Sub-kalkulasi Item:</span>
+              <span class="cart-item-subtotal-val" id="cartItemSubtotal">Rp 9.750.000</span>
+            </div>
+          </div>
+
+          <!-- Free Complementary Banner -->
+          <div class="complementary-banner" id="cartCompBanner">
+            <span class="comp-text" id="cartCompText">FREE COMPLEMENTARY: Peralatan Pemanas & 3 Waiter</span>
+            <span class="comp-tag">Termasuk</span>
+          </div>
+
+          <!-- Bill Calculation Breakdown -->
+          <div class="bill-breakdown-card">
+            <div class="bill-line">
+              <span id="billSubtotalLabel">Subtotal Menu (150 Pax)</span>
+              <span class="val" id="billSubtotalVal">Rp 9.750.000</span>
+            </div>
+            <div class="bill-line" style="align-items: flex-start;">
+              <div style="flex: 1; padding-right: 0.5rem;">
+                <span style="display:block; font-size:11px;">Biaya Layanan & Pengiriman:</span>
+                <select id="deliveryOptionSelect" class="delivery-select" onchange="AishPOS.setDeliveryType(this.value)">
+                  <option value="buffet">Prasmanan & Setup Buffet (Rp 350.000)</option>
+                  <option value="kurir">Kurir Reguler / Satuan (Rp 20.000)</option>
+                  <option value="pickup">Ambil Sendiri / Dine-in (Rp 0)</option>
+                </select>
+              </div>
+              <span class="val" id="billDeliveryVal" style="white-space: nowrap; margin-top: 4px;">Rp 350.000</span>
+            </div>
+            <div class="bill-line">
+              <span>Pajak Restoran / PB1 (10%) <span title="Pajak Daerah Makanan 10%" style="cursor:help;">ℹ️</span></span>
+              <span class="val" id="billTaxVal">Rp 975.000</span>
+            </div>
+            <div class="bill-line discount">
+              <span>Diskon Khusus Instansi</span>
+              <span class="val" id="billDiscountVal">- Rp 0</span>
+            </div>
+
+            <div class="total-due-row">
+              <div>
+                <div class="total-due-title">TOTAL TAGIHAN ACARA</div>
+                <div class="total-due-subtitle">Sudah termasuk PPN & Setup</div>
+              </div>
+              <div class="total-due-amount" id="billTotalDueVal">
+                Rp 11.075.000
+              </div>
+            </div>
+          </div>
+
+          <!-- Terms of Payment (DP 30%, DP 50%, Pelunasan) -->
+          <div class="payment-terms-box">
+            <div class="payment-terms-header">
+              <span>KETENTUAN PEMBAYARAN (TERM OF PAYMENT)</span>
+              <span class="method-badge">Transfer / QRIS / EDC</span>
+            </div>
+
+            <div class="dp-options-grid">
+              <button class="dp-option-btn" data-term="dp30" onclick="AishPOS.setPaymentTerm('dp30')">
+                <span class="dp-title">DP 30%</span>
+                <span class="dp-amount" id="dp30Amount">Rp 3.322.500</span>
+              </button>
+              <button class="dp-option-btn active" data-term="dp50" onclick="AishPOS.setPaymentTerm('dp50')">
+                <span class="dp-title">DP 50%</span>
+                <span class="dp-amount" id="dp50Amount">Rp 5.537.500</span>
+              </button>
+              <button class="dp-option-btn" data-term="pelunasan" onclick="AishPOS.setPaymentTerm('pelunasan')">
+                <span class="dp-title">Pelunasan</span>
+                <span class="dp-amount" id="pelunasanAmount">Rp 11.075.000</span>
+              </button>
+            </div>
+
+            <div class="charge-now-card">
+              <span class="charge-now-label">Nominal Ditagih Kasir Saat Ini:</span>
+              <span class="charge-now-value" id="chargeNowAmount">Rp 5.537.500</span>
+            </div>
+          </div>
+
+          <!-- Dispatch Logistics Box -->
+          <div class="dispatch-estimate-card">
+            <div class="dispatch-left">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="1" y="3" width="15" height="13"></rect>
+                <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+                <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                <circle cx="18.5" cy="18.5" r="2.5"></circle>
+              </svg>
+              <div>
+                <div class="dispatch-text-title">ESTIMASI BERANGKAT DAPUR</div>
+                <div class="dispatch-text-val">08:45 WIB • Armada Box 02 (B 9182 PQA)</div>
+              </div>
+            </div>
+            <span class="badge-schedule-on">On Schedule</span>
+          </div>
+
+        </div>
+
+        <!-- Sticky Cart Footer Actions -->
+        <div class="cart-footer-actions">
+          <button class="btn-checkout-primary" onclick="AishPOS.openPaymentModal()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+              <polyline points="17 21 17 13 7 13 7 21"></polyline>
+              <polyline points="7 3 7 8 15 8"></polyline>
+            </svg>
+            <span>Simpan Pesanan & Buat Invoice</span>
+          </button>
+
+          <div class="cart-secondary-actions-row">
+            <button class="btn-action-outline" onclick="AishPOS.printKitchenSlip()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                <rect x="6" y="14" width="12" height="8"></rect>
+              </svg>
+              <span>Cetak Slip Dapur</span>
+            </button>
+
+            <button class="btn-action-outline" onclick="AishPOS.shareWhatsappInvoice()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+              </svg>
+              <span>Kirim WA Invoice</span>
+            </button>
+          </div>
+        </div>
+      </aside>
+
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MODALS
+       ========================================================================== -->
+
+  <!-- 1. MODAL: Ubah Data Pemesan & Lokasi Acara -->
+  <div class="modal-backdrop" id="modalEditCustomer">
+    <div class="modal-container">
+      <div class="modal-header">
+        <div class="modal-header-title">
+          <span>📍</span>
+          <span>Edit Data Pemesan & Lokasi Acara</span>
+        </div>
+        <button class="btn-close-modal" onclick="AishPOS.closeModal('modalEditCustomer')">✕</button>
+      </div>
+      <form onsubmit="AishPOS.saveCustomerData(event)">
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Nama Lengkap Pemesan / Klien</label>
+              <input type="text" id="editCustName" class="form-input" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">No. WhatsApp / HP</label>
+              <input type="text" id="editCustPhone" class="form-input" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Tanggal Pelaksanaan Acara</label>
+              <input type="text" id="editCustDate" class="form-input" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Waktu / Jam Acara</label>
+              <input type="text" id="editCustTime" class="form-input" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Jenis Acara</label>
+            <select id="editCustEventType" class="form-select">
+              <option value="Resepsi Pernikahan">Resepsi Pernikahan (Wedding)</option>
+              <option value="Syukuran & Aqiqah">Syukuran & Aqiqah</option>
+              <option value="Corporate Gathering">Corporate Gathering / Rapat Kantor</option>
+              <option value="Lamaran & Tunangan">Lamaran & Tunangan</option>
+              <option value="Ulang Tahun">Pesta Ulang Tahun</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Alamat Lengkap & Ballroom / Lokasi Venue</label>
+            <textarea id="editCustVenue" class="form-textarea" rows="3" required></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-action-outline" onclick="AishPOS.closeModal('modalEditCustomer')">Batal</button>
+          <button type="submit" class="btn-checkout-primary" style="height: 38px; padding: 0 1.25rem;">Simpan Perubahan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. MODAL: Kustomisasi Lauk & Tambah Ekstra -->
+  <div class="modal-backdrop" id="modalCustomLauk">
+    <div class="modal-container">
+      <div class="modal-header">
+        <div class="modal-header-title">
+          <span>🍲</span>
+          <span>Kustomisasi Menu & Pergantian Lauk</span>
+        </div>
+        <button class="btn-close-modal" onclick="AishPOS.closeModal('modalCustomLauk')">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 12px; color: #475569;">
+          Pilih lauk yang diinginkan untuk paket prasmanan atau nasi box. Tim dapur akan menyesuaikan persiapan bumbu & roll top chafing dish.
+        </p>
+        
+        <div class="form-group">
+          <label class="form-label">Pilihan Lauk & Sayuran Tersedia</label>
+          <div id="customDishesChecklist" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; max-height: 200px; overflow-y: auto; padding: 0.5rem; border: 1px solid var(--border-light); border-radius: 4px;">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Instruksi Khusus Dapur (Rasa, Alergi, Non-MSG, Sambal)</label>
+          <textarea id="customNotesInput" class="form-textarea" rows="2" placeholder="Contoh: Sambal dipisah, tanpa penyedap rasa sintetis, sediakan 2 meja buffet"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-action-outline" onclick="AishPOS.closeModal('modalCustomLauk')">Batal</button>
+        <button type="button" class="btn-checkout-primary" style="height: 38px; padding: 0 1.25rem;" onclick="AishPOS.saveCustomLauk()">Terapkan ke Pesanan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. MODAL: Atur Jadwal Food Tasting -->
+  <div class="modal-backdrop" id="modalFoodTasting">
+    <div class="modal-container">
+      <div class="modal-header">
+        <div class="modal-header-title">
+          <span>👨‍🍳</span>
+          <span>Jadwalkan Sesi Food Tasting</span>
+        </div>
+        <button class="btn-close-modal" onclick="AishPOS.closeModal('modalFoodTasting')">✕</button>
+      </div>
+      <form onsubmit="AishPOS.saveFoodTasting(event)">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Nama Calon Mempelai / Klien</label>
+            <input type="text" id="tastingClientName" class="form-input" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Tanggal Food Tasting</label>
+              <input type="date" class="form-input" value="2026-10-25" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Jam Kunjungan</label>
+              <select class="form-select">
+                <option>11:00 WIB (Sesi Siang)</option>
+                <option>14:00 WIB (Sesi Sore)</option>
+                <option>18:30 WIB (Sesi Malam)</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Lokasi Tasting</label>
+            <select class="form-select">
+              <option>Dapur Utama & VIP Tasting Lounge - Jaksel Kitchen 01</option>
+              <option>Kirim Tester Pack ke Rumah / Kantor Klien</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Menu yang Ingin Dicicipi</label>
+            <textarea class="form-textarea" rows="2" placeholder="Daftar lauk utama yang ingin diuji rasa bersama keluarga..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-action-outline" onclick="AishPOS.closeModal('modalFoodTasting')">Tutup</button>
+          <button type="submit" class="btn-checkout-primary" style="height: 38px; padding: 0 1.25rem;">Konfirmasi Jadwal Tasting</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 4. MODAL: Kasir POS Payment & Virtual Keypad -->
+  <div class="modal-backdrop" id="modalPayment">
+    <div class="modal-container large">
+      <div class="modal-header">
+        <div class="modal-header-title">
+          <span>💳</span>
+          <span>Penyelesaian Transaksi & Pembayaran POS (<span id="payInvoiceCode" class="font-mono"></span>)</span>
+        </div>
+        <button class="btn-close-modal" onclick="AishPOS.closeModal('modalPayment')">✕</button>
+      </div>
+      <div class="modal-body">
+        
+        <div class="tender-layout">
+          <!-- Left Tender Column: Payment Methods & Bill Summary -->
+          <div>
+            <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 0.4rem;">
+              RINGKASAN TAGIHAN & KLIEN
+            </div>
+            <div style="background: #f8fafc; border: 1px solid var(--border-light); border-radius: 4px; padding: 0.75rem; margin-bottom: 0.85rem;">
+              <div id="payCustomerSummary" style="font-size: 12.5px; font-weight: 700; color: #0f172a; margin-bottom: 4px;"></div>
+              <div style="display: flex; justify-content: space-between; font-size: 12px; color: #475569;">
+                <span>Total Biaya Acara:</span>
+                <strong class="font-mono" id="payTotalDue" style="color: #0f172a;"></strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 12px; color: #166534; font-weight: 700; margin-top: 4px; border-top: 1px dashed var(--border-light); padding-top: 4px;">
+                <span>Wajib Dibayar Sekarang:</span>
+                <span class="font-mono" id="payChargeNow" style="font-size: 14px;"></span>
+              </div>
+            </div>
+
+            <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 0.4rem;">
+              PILIH METODE PEMBAYARAN
+            </div>
+            <div class="payment-methods-grid">
+              <div class="payment-method-card active" onclick="AishPOS.selectPaymentMethod('Transfer QRIS', this)">
+                <span class="method-icon">📱</span>
+                <div>
+                  <div class="method-name">Transfer QRIS</div>
+                  <div style="font-size: 10px; color: #64748b;">Instan via All E-Wallet</div>
+                </div>
+              </div>
+              <div class="payment-method-card" onclick="AishPOS.selectPaymentMethod('EDC BCA', this)">
+                <span class="method-icon">💳</span>
+                <div>
+                  <div class="method-name">BCA EDC</div>
+                  <div style="font-size: 10px; color: #64748b;">Debit & Kartu Kredit</div>
+                </div>
+              </div>
+              <div class="payment-method-card" onclick="AishPOS.selectPaymentMethod('Transfer Mandiri', this)">
+                <span class="method-icon">🏦</span>
+                <div>
+                  <div class="method-name">Transfer Mandiri</div>
+                  <div style="font-size: 10px; color: #64748b;">Rekening Perusahaan</div>
+                </div>
+              </div>
+              <div class="payment-method-card" onclick="AishPOS.selectPaymentMethod('Tunai / Cash', this)">
+                <span class="method-icon">💵</span>
+                <div>
+                  <div class="method-name">Tunai / Cash</div>
+                  <div style="font-size: 10px; color: #64748b;">Uang Pas di Kasir</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Tender Column: Numeric Touch Keypad -->
+          <div>
+            <div class="tender-display-box">
+              <span class="tender-display-label">Nominal Uang Diterima</span>
+              <div class="tender-display-val" id="tenderAmountDisplay">Rp 0</div>
+            </div>
+
+            <div class="numpad-grid">
+              <button class="btn-numpad" onclick="AishPOS.numpadInput('1')">1</button>
+              <button class="btn-numpad" onclick="AishPOS.numpadInput('2')">2</button>
+              <button class="btn-numpad" onclick="AishPOS.numpadInput('3')">3</button>
+              <button class="btn-numpad" onclick="AishPOS.numpadInput('4')">4</button>
+              <button class="btn-numpad" onclick="AishPOS.numpadInput('5')">5</button>
+              <button class="btn-numpad" onclick="AishPOS.numpadInput('6')">6</button>
+              <button class="btn-numpad" onclick="AishPOS.numpadInput('7')">7</button>
+              <button class="btn-numpad" onclick="AishPOS.numpadInput('8')">8</button>
+              <button class="btn-numpad" onclick="AishPOS.numpadInput('9')">9</button>
+              <button class="btn-numpad action" onclick="AishPOS.numpadInput('C')">C</button>
+              <button class="btn-numpad" onclick="AishPOS.numpadInput('0')">0</button>
+              <button class="btn-numpad action" onclick="AishPOS.numpadInput('DEL')">⌫</button>
+            </div>
+
+            <div class="quick-cash-chips">
+              <button class="btn-quick-cash" onclick="AishPOS.quickCash('pas')">Uang Pas</button>
+              <button class="btn-quick-cash" onclick="AishPOS.quickCash(50000)">+Rp 50.000</button>
+              <button class="btn-quick-cash" onclick="AishPOS.quickCash(100000)">+Rp 100.000</button>
+              <button class="btn-quick-cash" onclick="AishPOS.numpadInput('000')">+000</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-action-outline" onclick="AishPOS.closeModal('modalPayment')">Batal</button>
+        <button type="button" class="btn-checkout-primary" style="height: 42px; padding: 0 1.5rem;" onclick="AishPOS.confirmPayment()">
+          ✓ Proses Pembayaran & Cetak
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. MODAL: Preview Struk / Invoice Resmi -->
+  <div class="modal-backdrop" id="modalInvoice">
+    <div class="modal-container large">
+      <div class="modal-header">
+        <div class="modal-header-title">
+          <span>🧾</span>
+          <span>Invoice & Bukti Pembayaran Resmi Aish Catering</span>
+        </div>
+        <button class="btn-close-modal" onclick="AishPOS.closeModal('modalInvoice')">✕</button>
+      </div>
+      <div class="modal-body" style="background-color: #f8fafc;">
+        <div class="invoice-print-sheet">
+          <div class="invoice-header-row">
+            <div class="invoice-company">
+              <h3>AISH CATERING NUSANTARA</h3>
+              <p>PT Aish Boga Nusantara • Izin Kemenkes No. 442/JB/2022</p>
+              <p>Jl. Tebet Barat Raya No. 45, Jakarta Selatan | Telp: (021) 8370-1122</p>
+            </div>
+            <div class="invoice-meta-right">
+              <div class="inv-number" id="printInvNumber">INV-2025/V/092</div>
+              <div style="font-size: 11px; color: #64748b;" id="printInvDate"></div>
+              <div class="status-pill lunas" style="margin-top: 4px;">
+                <span class="status-dot"></span>
+                <span>TERVERIFIKASI POS</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row" style="margin-bottom: 1rem; font-size: 12px;">
+            <div>
+              <span style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase;">Ditujukan Kepada:</span>
+              <div style="font-weight: 700;" id="printCustName">Hj. Nurlaila Fitri</div>
+              <div class="font-mono" id="printCustPhone">0812-9843-2211</div>
+            </div>
+            <div>
+              <span style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase;">Detail Acara & Lokasi:</span>
+              <div style="font-weight: 700;" id="printCustEvent"></div>
+              <div style="color: #475569;" id="printCustVenue"></div>
+            </div>
+          </div>
+
+          <table class="data-table" style="margin-bottom: 1rem;">
+            <thead>
+              <tr>
+                <th>Rincian Paket & Lauk</th>
+                <th style="text-align: center;">Jumlah (Pax)</th>
+                <th style="text-align: right;">Harga Satuan</th>
+                <th style="text-align: right;">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody id="printItemRow">
+              <!-- Item details -->
+            </tbody>
+          </table>
+
+          <div style="display: flex; justify-content: flex-end;">
+            <div style="width: 280px; font-size: 12px; display: flex; flex-direction: column; gap: 4px;">
+              <div style="display: flex; justify-content: space-between;">
+                <span>Subtotal Menu:</span>
+                <span class="font-mono" id="printSubtotalVal"></span>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span>Biaya Kirim & Setup:</span>
+                <span class="font-mono" id="printDeliveryVal"></span>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span>Pajak Restoran (PB1 10%):</span>
+                <span class="font-mono" id="printTaxVal"></span>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 14px; border-top: 1px solid #0f172a; padding-top: 4px;">
+                <span>Total Tagihan Acara:</span>
+                <span class="font-mono" id="printTotalVal"></span>
+              </div>
+              <div style="display: flex; justify-content: space-between; color: #166534; font-weight: 700;">
+                <span>Sudah Dibayar (DP/Tunai):</span>
+                <span class="font-mono" id="printPaidVal"></span>
+              </div>
+              <div style="display: flex; justify-content: space-between; color: #991b1b; font-weight: 700;">
+                <span>Sisa Pelunasan:</span>
+                <span class="font-mono" id="printRemainingVal"></span>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top: 1.5rem; padding-top: 0.75rem; border-top: 1px dashed var(--border-light); font-size: 11px; color: #64748b; text-align: center;">
+            Pelunasan dilakukan paling lambat H-3 sebelum jadwal pelaksanaan acara. Bukti sah ini dikeluarkan oleh sistem resmi Aish Catering.
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-action-outline" onclick="window.print()">
+          🖨️ Cetak Invoice (Printer/PDF)
+        </button>
+        <button type="button" class="btn-checkout-primary" style="height: 38px; padding: 0 1.25rem;" onclick="AishPOS.closeModal('modalInvoice')">
+          Selesai
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- LOGIN OVERLAY MODAL (BLOCKING AUTHENTICATION SCREEN) -->
+  <!-- ========================================================================= -->
+  <div class="login-overlay active" id="loginOverlay">
+    <div class="login-card">
+      <div class="login-brand-header">
+        <div class="login-logo-circle">
+          <span>🍲</span>
+        </div>
+        <h2>AISH CATERING</h2>
+        <p class="login-tagline">Sistem Kasir & Operasional Internal</p>
+      </div>
+
+      <div class="login-instruction-pill">
+        <span class="status-dot-pulse"></span>
+        <span>Akses Staf Operasional Terproteksi</span>
+      </div>
+
+      <form id="loginForm" onsubmit="AishPOS.handleLogin(event); return false;">
+        <div class="login-input-group">
+          <label for="loginUsername">Nama Pengguna (Username)</label>
+          <div class="input-icon-box">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            <input type="text" id="loginUsername" placeholder="Contoh: admin / kasir" autocomplete="username" required autofocus>
+          </div>
+        </div>
+
+        <div class="login-input-group">
+          <label for="loginPassword">Kata Sandi / PIN</label>
+          <div class="input-icon-box">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            <input type="password" id="loginPassword" placeholder="Masukkan password / PIN" autocomplete="current-password" required>
+          </div>
+        </div>
+
+        <div class="login-error-alert" id="loginErrorMsg"></div>
+
+        <button type="submit" class="btn-login-submit" id="btnLoginSubmit">
+          <span>Masuk ke Sistem Kasir</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+
+        <!-- Quick Switch Demo Chips for Fast Cashier Access -->
+        <div class="login-quick-section">
+          <span class="quick-title">Akses Cepat (Akun Bawaan):</span>
+          <div class="quick-chips-grid">
+            <button type="button" class="quick-chip chip-admin" onclick="AishPOS.fillQuickLogin('admin', 'admin123')">
+              <strong>Admin</strong>
+              <span>admin123</span>
+            </button>
+            <button type="button" class="quick-chip chip-kasir" onclick="AishPOS.fillQuickLogin('kasir', '123456')">
+              <strong>Kasir</strong>
+              <span>123456</span>
+            </button>
+          </div>
+        </div>
+      </form>
+
+      <div class="login-footer-info">
+        <span>Aish Catering POS v1.0 • Cabang Jakarta Selatan Kitchen 01</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-notification" id="posToast"></div>
+
+  <!-- Application Logic -->
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
