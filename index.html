@@ -59,7 +59,7 @@
           <span>Pesanan Baru</span>
         </button>
 
-        <button class="header-icon-btn" title="Notifikasi Dapur">
+        <button class="header-icon-btn" title="Notifikasi Dapur" onclick="AishPOS.showKitchenNotifSummary()">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
             <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
@@ -184,7 +184,7 @@
             </div>
           </div>
 
-          <button class="btn-help" onclick="alert('Pusat Bantuan Kasir POS Aish Catering: Silakan hubungi Supervisor Operasional di ext 104 atau WhatsApp 0812-9988-7766.');">
+          <button class="btn-help" onclick="AishPOS.showToast({ title: 'Pusat Bantuan Kasir POS', message: 'Silakan hubungi Supervisor Operasional di ext 104 atau WhatsApp 0812-9988-7766.', type: 'info', duration: 5500 });">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="10"></circle>
               <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>

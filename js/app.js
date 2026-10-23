@@ -989,10 +989,19 @@ const AishPOS = (() => {
         `Terima kasih telah mempercayakan hidangan acara istimewa Anda kepada Aish Catering!`;
 
       navigator.clipboard.writeText(text).then(() => {
-        showToast('Teks Invoice WA tersalin ke Clipboard!', 'info');
-      }).catch(() => {});
-
-      alert("Pesan WhatsApp siap dikirim ke nomor " + state.customer.phone + ":\n\n" + text);
+        showToast({
+          title: 'Invoice WhatsApp Disalin',
+          message: `Format pesan WA untuk ${state.customer.name} (${state.customer.phone}) siap dikirim!`,
+          type: 'success',
+          duration: 4500
+        });
+      }).catch(() => {
+        showToast({
+          title: 'Kirim WhatsApp',
+          message: `Pesan siap dikirim ke nomor ${state.customer.phone}`,
+          type: 'info'
+        });
+      });
     },
 
     // New Order Reset
@@ -1054,7 +1063,24 @@ const AishPOS = (() => {
         }
       }
       renderKitchenDisplay();
-      showToast(`Status pesanan dapur ${orderId} diperbarui!`);
+      showToast({
+        title: 'Status KDS Diperbarui',
+        message: `Tiket pesanan dapur ${orderId} maju ke tahap berikutnya!`,
+        type: 'info'
+      });
+    },
+
+    showKitchenNotifSummary: () => {
+      refreshStorageState();
+      const antreanCount = kitchenOrders.filter(o => o.stage === 'antrean').length;
+      const masakCount = kitchenOrders.filter(o => o.stage === 'masak').length;
+      const kirimCount = kitchenOrders.filter(o => o.stage === 'kirim').length;
+      showToast({
+        title: 'Aktivitas Dapur & KDS',
+        message: `${antreanCount} antrean persiapan • ${masakCount} sedang dimasak • ${kirimCount} siap armada kirim`,
+        type: 'info',
+        duration: 4500
+      });
     },
 
     // Synchronize UI with Current Active Session
