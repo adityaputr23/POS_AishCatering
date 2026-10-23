@@ -34,7 +34,7 @@
             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
             <polyline points="9 22 9 12 15 12 15 22"></polyline>
           </svg>
-          <span>Cabang Jakarta Selatan - Kitchen 01</span>
+          <span>Cabang Singkawang, Kalimantan Barat - Kitchen 01</span>
         </div>
       </div>
 
@@ -705,8 +705,8 @@
             </div>
             
             <div class="event-info-name">
-              <span id="cartCustomerName">Hj. Nurlaila Fitri</span>
-              <span class="phone" id="cartCustomerPhone">0812-9843-2211</span>
+              <span id="cartCustomerName">Pelanggan Baru</span>
+              <span class="phone" id="cartCustomerPhone">-</span>
             </div>
 
             <div class="event-meta-line">
@@ -716,7 +716,7 @@
                 <line x1="8" y1="2" x2="8" y2="6"></line>
                 <line x1="3" y1="10" x2="21" y2="10"></line>
               </svg>
-              <span id="cartEventTime">Sabtu, 24 Mei 2025 • 10:30 WIB</span>
+              <span id="cartEventTime">Hari Ini • Siap Dipesan</span>
             </div>
 
             <div class="event-meta-line">
@@ -724,12 +724,12 @@
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                 <circle cx="12" cy="10" r="3"></circle>
               </svg>
-              <span id="cartEventVenue">Gedung Graha Mandiri Lt. 3 Ballroom, Jl. Imam Bonjol No.61, Menteng, Jakarta...</span>
+              <span id="cartEventVenue">Dapur Utama / Takeaway / Kirim</span>
             </div>
           </div>
 
           <!-- Empty Cart State -->
-          <div class="cart-empty-card" id="cartEmptyCard" style="display: none;">
+          <div class="cart-empty-card" id="cartEmptyCard" style="display: block;">
             <div class="empty-cart-icon">🛒</div>
             <h4>Keranjang Masih Kosong</h4>
             <p>Silakan klik tombol <strong>+ Pilih</strong> pada katalog di sebelah kiri untuk memasukkan pesanan.</p>
@@ -740,9 +740,8 @@
             <!-- Dynamically rendered by renderCart() -->
           </div>
 
-
           <!-- Free Complementary Banner -->
-          <div class="complementary-banner" id="cartCompBanner">
+          <div class="complementary-banner" id="cartCompBanner" style="display: none;">
             <span class="comp-text" id="cartCompText">FREE COMPLEMENTARY: Peralatan Pemanas & 3 Waiter</span>
             <span class="comp-tag">Termasuk</span>
           </div>
@@ -750,23 +749,23 @@
           <!-- Bill Calculation Breakdown -->
           <div class="bill-breakdown-card">
             <div class="bill-line">
-              <span id="billSubtotalLabel">Subtotal Menu (150 Pax)</span>
-              <span class="val" id="billSubtotalVal">Rp 9.750.000</span>
+              <span id="billSubtotalLabel">Subtotal Menu (0 Item)</span>
+              <span class="val" id="billSubtotalVal">Rp 0</span>
             </div>
             <div class="bill-line" style="align-items: flex-start;">
               <div style="flex: 1; padding-right: 0.5rem;">
                 <span style="display:block; font-size:11px;">Biaya Layanan & Pengiriman:</span>
                 <select id="deliveryOptionSelect" class="delivery-select" onchange="AishPOS.setDeliveryType(this.value)">
-                  <option value="buffet">Prasmanan & Setup Buffet (Rp 350.000)</option>
+                  <option value="pickup" selected>Ambil Sendiri / Dine-in (Rp 0)</option>
                   <option value="kurir">Kurir Reguler / Satuan (Rp 20.000)</option>
-                  <option value="pickup">Ambil Sendiri / Dine-in (Rp 0)</option>
+                  <option value="buffet">Prasmanan & Setup Buffet (Rp 350.000)</option>
                 </select>
               </div>
-              <span class="val" id="billDeliveryVal" style="white-space: nowrap; margin-top: 4px;">Rp 350.000</span>
+              <span class="val" id="billDeliveryVal" style="white-space: nowrap; margin-top: 4px;">Rp 0</span>
             </div>
             <div class="bill-line">
               <span>Pajak Restoran / PB1 (10%) <span title="Pajak Daerah Makanan 10%" style="cursor:help;">ℹ️</span></span>
-              <span class="val" id="billTaxVal">Rp 975.000</span>
+              <span class="val" id="billTaxVal">Rp 0</span>
             </div>
             <div class="bill-line discount">
               <span>Diskon Khusus Instansi</span>
@@ -779,7 +778,7 @@
                 <div class="total-due-subtitle">Sudah termasuk PPN & Setup</div>
               </div>
               <div class="total-due-amount" id="billTotalDueVal">
-                Rp 11.075.000
+                Rp 0
               </div>
             </div>
           </div>
@@ -794,21 +793,21 @@
             <div class="dp-options-grid">
               <button class="dp-option-btn" data-term="dp30" onclick="AishPOS.setPaymentTerm('dp30')">
                 <span class="dp-title">DP 30%</span>
-                <span class="dp-amount" id="dp30Amount">Rp 3.322.500</span>
+                <span class="dp-amount" id="dp30Amount">Rp 0</span>
               </button>
-              <button class="dp-option-btn active" data-term="dp50" onclick="AishPOS.setPaymentTerm('dp50')">
+              <button class="dp-option-btn" data-term="dp50" onclick="AishPOS.setPaymentTerm('dp50')">
                 <span class="dp-title">DP 50%</span>
-                <span class="dp-amount" id="dp50Amount">Rp 5.537.500</span>
+                <span class="dp-amount" id="dp50Amount">Rp 0</span>
               </button>
-              <button class="dp-option-btn" data-term="pelunasan" onclick="AishPOS.setPaymentTerm('pelunasan')">
+              <button class="dp-option-btn active" data-term="pelunasan" onclick="AishPOS.setPaymentTerm('pelunasan')">
                 <span class="dp-title">Pelunasan</span>
-                <span class="dp-amount" id="pelunasanAmount">Rp 11.075.000</span>
+                <span class="dp-amount" id="pelunasanAmount">Rp 0</span>
               </button>
             </div>
 
             <div class="charge-now-card">
               <span class="charge-now-label">Nominal Ditagih Kasir Saat Ini:</span>
-              <span class="charge-now-value" id="chargeNowAmount">Rp 5.537.500</span>
+              <span class="charge-now-value" id="chargeNowAmount">Rp 0</span>
             </div>
           </div>
 
@@ -823,7 +822,7 @@
               </svg>
               <div>
                 <div class="dispatch-text-title">ESTIMASI BERANGKAT DAPUR</div>
-                <div class="dispatch-text-val">08:45 WIB • Armada Box 02 (B 9182 PQA)</div>
+                <div class="dispatch-text-val">08:45 WIB • Armada Box 02 (KB 8192 SK)</div>
               </div>
             </div>
             <span class="badge-schedule-on">On Schedule</span>
@@ -994,7 +993,7 @@
           <div class="form-group">
             <label class="form-label">Lokasi Tasting</label>
             <select class="form-select">
-              <option>Dapur Utama & VIP Tasting Lounge - Jaksel Kitchen 01</option>
+              <option>Dapur Utama & VIP Tasting Lounge - Singkawang Kitchen 01</option>
               <option>Kirim Tester Pack ke Rumah / Kantor Klien</option>
             </select>
           </div>
@@ -1133,7 +1132,7 @@
             <div class="invoice-company">
               <h3>AISH CATERING NUSANTARA</h3>
               <p>PT Aish Boga Nusantara • Izin Kemenkes No. 442/JB/2022</p>
-              <p>Jl. Tebet Barat Raya No. 45, Jakarta Selatan | Telp: (021) 8370-1122</p>
+              <p>Jl. Diponegoro No. 88, Kota Singkawang, Kalimantan Barat | Telp: (0562) 631-889 / 0812-5678-9012</p>
             </div>
             <div class="invoice-meta-right">
               <div class="inv-number" id="printInvNumber">INV-2025/V/092</div>
@@ -1375,7 +1374,7 @@
       </form>
 
       <div class="login-footer-info">
-        <span>Aish Catering POS v1.0 • Cabang Jakarta Selatan Kitchen 01</span>
+        <span>Aish Catering POS v1.0 • Singkawang, Kalimantan Barat (Kitchen 01)</span>
         <button type="button" class="btn-exit-app-link" onclick="AishPOS.exitApp()" title="Keluar dan tutup jendela aplikasi POS">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>
           <span>Tutup / Keluar Aplikasi</span>

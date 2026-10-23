@@ -135,7 +135,18 @@ const AishPOS = (() => {
     }
   }
 
-  // Active Transaction State
+  // Active Transaction State (Default Bersih Saat Fresh Launch)
+  const generateNewInvoice = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const rand = Math.floor(100 + Math.random() * 900);
+    return `INV-${year}/V/${rand}`;
+  };
+
+  const getTodayDateStr = () => {
+    return new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  };
+
   let state = {
     activeView: 'pos',
     currentCategory: 'Semua Menu',
@@ -143,21 +154,15 @@ const AishPOS = (() => {
     masterCatalogCategory: 'Semua Menu',
     masterCatalogSearch: '',
     customer: {
-      name: 'Hj. Nurlaila Fitri',
-      phone: '0812-9843-2211',
-      date: 'Sabtu, 24 Mei 2025',
-      time: '10:30 WIB',
-      venue: 'Gedung Graha Mandiri Lt. 3 Ballroom, Jl. Imam Bonjol No.61, Menteng, Jakarta...',
-      eventType: 'Resepsi Pernikahan'
+      name: 'Pelanggan Baru',
+      phone: '-',
+      date: getTodayDateStr(),
+      time: '12:00 WIB',
+      venue: 'Dapur / Takeaway / Pengiriman',
+      eventType: 'Pesanan Baru'
     },
-    invoiceNumber: 'INV-2025/V/092',
-    cart: [
-      {
-        ...catalogData[0],
-        pax: 150,
-        customLauk: [...(catalogData[0].defaultLauk || [])]
-      }
-    ],
+    invoiceNumber: generateNewInvoice(),
+    cart: [], // Bersih saat fresh login, menu baru masuk saat kasir mengklik menu
     get cartItem() {
       return this.cart && this.cart.length > 0 ? this.cart[0] : null;
     },
@@ -168,11 +173,11 @@ const AishPOS = (() => {
         this.cart = [val];
       }
     },
-    deliveryType: 'buffet',
-    deliveryFee: 350000,
+    deliveryType: 'pickup',
+    deliveryFee: 0,
     pb1TaxRate: 0.10, // 10%
     discount: 0,
-    selectedPaymentTerm: 'dp50', // 'dp30', 'dp50', 'pelunasan'
+    selectedPaymentTerm: 'pelunasan', // 'dp30', 'dp50', 'pelunasan'
     tenderPaidInput: 0,
     selectedPaymentMethod: 'Transfer QRIS',
     editingCustomLaukIndex: 0
@@ -270,6 +275,11 @@ const AishPOS = (() => {
       if (emptyCard) emptyCard.style.display = 'block';
       if (itemsContainer) itemsContainer.innerHTML = '';
       if (compBanner) compBanner.style.display = 'none';
+
+      const invoiceTag = document.getElementById('cartInvoiceTag');
+      if (invoiceTag) invoiceTag.textContent = state.invoiceNumber;
+      const delSelect = document.getElementById('deliveryOptionSelect');
+      if (delSelect) delSelect.value = state.deliveryType || 'pickup';
 
       document.getElementById('billSubtotalLabel').textContent = 'Subtotal Menu (0 Item)';
       document.getElementById('billSubtotalVal').textContent = formatIDR(0);
@@ -1200,7 +1210,7 @@ const AishPOS = (() => {
         </head>
         <body>
           <h2>*** TIKET DAPUR CATERING ***</h2>
-          <h3>AISH CATERING - JAKSEL</h3>
+          <h3>AISH CATERING - SINGKAWANG</h3>
           <hr/>
           <div class="row"><span>NO PESANAN:</span><span class="bold">${state.invoiceNumber}</span></div>
           <div class="row"><span>WAKTU ACARA:</span><span>${state.customer.date} • ${state.customer.time}</span></div>
@@ -1211,7 +1221,7 @@ const AishPOS = (() => {
           ${itemsHtml}
           <hr/>
           <div class="bold">COMPLEMENTARY / LOGISTIK:</div>
-          <div>Armada Pengiriman: Box 02 (B 9182 PQA)</div>
+          <div>Armada Pengiriman: Box 02 (KB 8192 SK)</div>
           <hr/>
           <div style="text-align: center; font-size: 10px; margin-top: 12px;">
             Dicetak: ${new Date().toLocaleTimeString('id-ID')} WIB oleh ${staffLabel}
@@ -1269,24 +1279,26 @@ const AishPOS = (() => {
       });
     },
 
-    // New Order Reset
+    // New Order Reset (Keranjang Bersih)
     startNewOrder: () => {
-      const randomId = Math.floor(100 + Math.random() * 900);
-      state.invoiceNumber = `INV-2025/V/${randomId}`;
-      state.cart = [{ ...catalogData[0], pax: 100, customLauk: [...(catalogData[0].defaultLauk || [])] }];
+      state.invoiceNumber = generateNewInvoice();
+      state.cart = [];
       state.customer = {
         name: 'Pelanggan Baru',
-        phone: '0812-XXXX-XXXX',
-        date: 'Minggu, 1 Juni 2025',
-        time: '11:00 WIB',
-        venue: 'Jl. Kemang Raya No. 10, Jakarta Selatan',
-        eventType: 'Acara Syukuran'
+        phone: '-',
+        date: getTodayDateStr(),
+        time: '12:00 WIB',
+        venue: 'Dapur / Takeaway / Pengiriman',
+        eventType: 'Pesanan Baru'
       };
-      state.selectedPaymentTerm = 'dp50';
+      state.deliveryType = 'pickup';
+      state.deliveryFee = 0;
+      state.discount = 0;
+      state.selectedPaymentTerm = 'pelunasan';
       AishPOS.switchView('pos');
       renderCart();
       renderCatalog();
-      showToast(`Pesanan Baru diinisialisasi (${state.invoiceNumber})`);
+      showToast(`Pesanan Baru dimulai (${state.invoiceNumber}). Silakan klik menu di katalog.`);
     },
 
     // Load Existing Event into Cart
