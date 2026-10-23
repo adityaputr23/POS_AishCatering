@@ -129,6 +129,7 @@ const AishPOS = (() => {
   }
 
   // Active Transaction State
+  // Active Transaction State
   let state = {
     activeView: 'pos',
     currentCategory: 'Semua Menu',
@@ -142,14 +143,31 @@ const AishPOS = (() => {
       eventType: 'Resepsi Pernikahan'
     },
     invoiceNumber: 'INV-2025/V/092',
-    cartItem: { ...catalogData[0], pax: 150 },
+    cart: [
+      {
+        ...catalogData[0],
+        pax: 150,
+        customLauk: [...(catalogData[0].defaultLauk || [])]
+      }
+    ],
+    get cartItem() {
+      return this.cart && this.cart.length > 0 ? this.cart[0] : null;
+    },
+    set cartItem(val) {
+      if (!val) {
+        this.cart = [];
+      } else {
+        this.cart = [val];
+      }
+    },
     deliveryType: 'buffet',
     deliveryFee: 350000,
     pb1TaxRate: 0.10, // 10%
     discount: 0,
     selectedPaymentTerm: 'dp50', // 'dp30', 'dp50', 'pelunasan'
     tenderPaidInput: 0,
-    selectedPaymentMethod: 'Transfer QRIS'
+    selectedPaymentMethod: 'Transfer QRIS',
+    editingCustomLaukIndex: 0
   };
 
   // Helper formatting currency
@@ -159,21 +177,56 @@ const AishPOS = (() => {
 
   // Calculate financials
   const getFinancials = () => {
-    const hasItem = !!state.cartItem;
-    const itemSubtotal = hasItem ? (state.cartItem.price || 0) * (state.cartItem.pax || 0) : 0;
-    const deliveryFee = hasItem ? (state.deliveryFee || 0) : 0;
+    if (typeof AishCart !== 'undefined') {
+      const calc = AishCart.calculateFinancials(state.cart, state.deliveryType, state.deliveryFee, state.selectedPaymentTerm);
+      return {
+        itemSubtotal: calc.itemSubtotal,
+        totalPax: calc.totalPax,
+        deliveryFee: calc.deliveryFee,
+        taxPB1: calc.taxPB1,
+        discount: state.discount,
+        totalBill: calc.totalBill,
+        amountDueNow: calc.amountDueNow,
+        dp30Amount: Math.round(calc.totalBill * 0.30),
+        dp50Amount: Math.round(calc.totalBill * 0.50),
+        pelunasanAmount: calc.totalBill,
+        itemCount: calc.itemCount
+      };
+    }
+
+    const hasItems = state.cart && state.cart.length > 0;
+    if (!hasItems) {
+      return {
+        itemSubtotal: 0,
+        totalPax: 0,
+        deliveryFee: 0,
+        taxPB1: 0,
+        discount: 0,
+        totalBill: 0,
+        amountDueNow: 0,
+        dp30Amount: 0,
+        dp50Amount: 0,
+        pelunasanAmount: 0,
+        itemCount: 0
+      };
+    }
+
+    const itemSubtotal = state.cart.reduce((sum, it) => sum + ((Number(it.price) || 0) * (Number(it.pax) || 0)), 0);
+    const totalPax = state.cart.reduce((sum, it) => sum + (Number(it.pax) || 0), 0);
+    const deliveryFee = Number(state.deliveryFee) || 0;
     const taxPB1 = Math.round(itemSubtotal * state.pb1TaxRate);
-    const totalBill = hasItem ? Math.max(0, itemSubtotal + deliveryFee + taxPB1 - state.discount) : 0;
+    const totalBill = Math.max(0, itemSubtotal + deliveryFee + taxPB1 - state.discount);
 
     let termRate = 0.50;
     if (state.selectedPaymentTerm === 'dp30') termRate = 0.30;
     if (state.selectedPaymentTerm === 'dp50') termRate = 0.50;
-    if (state.selectedPaymentTerm === 'pelunasan') termRate = 1.00;
+    if (state.selectedPaymentTerm === 'pelunasan' || state.selectedPaymentTerm === 'full') termRate = 1.00;
 
     const amountDueNow = Math.round(totalBill * termRate);
 
     return {
       itemSubtotal,
+      totalPax,
       deliveryFee,
       taxPB1,
       discount: state.discount,
@@ -181,7 +234,8 @@ const AishPOS = (() => {
       amountDueNow,
       dp30Amount: Math.round(totalBill * 0.30),
       dp50Amount: Math.round(totalBill * 0.50),
-      pelunasanAmount: totalBill
+      pelunasanAmount: totalBill,
+      itemCount: state.cart.length
     };
   };
 
@@ -190,25 +244,26 @@ const AishPOS = (() => {
     const fin = getFinancials();
 
     // Customer info card
-    document.getElementById('cartCustomerName').textContent = state.customer.name;
-    document.getElementById('cartCustomerPhone').textContent = state.customer.phone;
-    document.getElementById('cartEventTime').textContent = `${state.customer.date} • ${state.customer.time}`;
-    document.getElementById('cartEventVenue').textContent = state.customer.venue;
+    const custNameEl = document.getElementById('cartCustomerName');
+    if (custNameEl) custNameEl.textContent = state.customer.name;
+    const custPhoneEl = document.getElementById('cartCustomerPhone');
+    if (custPhoneEl) custPhoneEl.textContent = state.customer.phone;
+    const eventTimeEl = document.getElementById('cartEventTime');
+    if (eventTimeEl) eventTimeEl.textContent = `${state.customer.date} • ${state.customer.time}`;
+    const eventVenueEl = document.getElementById('cartEventVenue');
+    if (eventVenueEl) eventVenueEl.textContent = state.customer.venue;
 
     const emptyCard = document.getElementById('cartEmptyCard');
-    const activeCard = document.getElementById('cartActiveItemCard');
+    const itemsContainer = document.getElementById('cartItemsContainer');
     const compBanner = document.getElementById('cartCompBanner');
-    const satuanNotice = document.getElementById('cartSatuanNotice');
 
-    // Cart Item Content
-    const item = state.cartItem;
-    if (!item) {
+    const cartList = state.cart || [];
+    if (cartList.length === 0) {
       if (emptyCard) emptyCard.style.display = 'block';
-      if (activeCard) activeCard.style.display = 'none';
+      if (itemsContainer) itemsContainer.innerHTML = '';
       if (compBanner) compBanner.style.display = 'none';
-      if (satuanNotice) satuanNotice.style.display = 'none';
 
-      document.getElementById('billSubtotalLabel').textContent = 'Subtotal Menu (0 Pax)';
+      document.getElementById('billSubtotalLabel').textContent = 'Subtotal Menu (0 Item)';
       document.getElementById('billSubtotalVal').textContent = formatIDR(0);
       document.getElementById('billDeliveryVal').textContent = formatIDR(0);
       document.getElementById('billTaxVal').textContent = formatIDR(0);
@@ -222,52 +277,97 @@ const AishPOS = (() => {
     }
 
     if (emptyCard) emptyCard.style.display = 'none';
-    if (activeCard) activeCard.style.display = 'block';
-    if (compBanner) compBanner.style.display = 'flex';
 
-    document.getElementById('cartItemCategory').textContent = item.categoryTag.toUpperCase() + (item.category === 'Paket Prasmanan' ? ' BUFFET' : '');
-    document.getElementById('cartItemName').textContent = item.name;
-    document.getElementById('cartItemUnitPrice').textContent = `${formatIDR(item.price)} / ${item.unit.replace('/', '')}`;
+    // Render multi-item cards
+    if (itemsContainer) {
+      itemsContainer.innerHTML = cartList.map((item, idx) => {
+        const itemSubtotal = (Number(item.price) || 0) * (Number(item.pax) || 0);
+        const isSatuan = item.pax < (item.minPax || 25);
+        const dishes = item.customLauk || item.defaultLauk || [];
 
-    // Direct input value
-    const paxInput = document.getElementById('cartPaxInput');
-    if (paxInput && document.activeElement !== paxInput) {
-      paxInput.value = item.pax;
+        return `
+          <div class="cart-item-card" data-cart-index="${idx}">
+            <div class="cart-item-top">
+              <div>
+                <span class="cart-item-cat">${item.categoryTag || item.category || 'MENU'}</span>
+                <h4 class="cart-item-name">${item.name}</h4>
+                <span class="cart-item-unit-price">${formatIDR(item.price)} ${item.unit || '/pax'}</span>
+              </div>
+              <button class="btn-remove-item" title="Hapus menu dari keranjang" onclick="AishPOS.removeCartItem(${idx})">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+              </button>
+            </div>
+
+            <div class="stepper-control-row">
+              <div class="pax-stepper">
+                <button type="button" class="stepper-btn" onclick="AishPOS.adjustPax(-1, ${idx})" title="Kurangi 1 Porsi">−</button>
+                <div class="stepper-input-wrap">
+                  <input type="number" class="stepper-input" min="1" step="1" value="${item.pax}" onchange="AishPOS.setPaxDirect(this.value, ${idx})" title="Ketik jumlah porsi langsung">
+                  <span class="stepper-unit-label">Pax</span>
+                </div>
+                <button type="button" class="stepper-btn" onclick="AishPOS.adjustPax(1, ${idx})" title="Tambah 1 Porsi">+</button>
+              </div>
+              <div class="stepper-shortcuts">
+                <button type="button" class="chip-stepper chip-satuan" onclick="AishPOS.setPaxDirect(1, ${idx})" title="Pesan Satuan (1 Porsi)">1</button>
+                <button type="button" class="chip-stepper" onclick="AishPOS.addPaxShortcut(10, ${idx})" title="Tambah 10 porsi">+10</button>
+                <button type="button" class="chip-stepper" onclick="AishPOS.addPaxShortcut(25, ${idx})" title="Tambah 25 porsi">+25</button>
+                <button type="button" class="chip-stepper" onclick="AishPOS.addPaxShortcut(50, ${idx})" title="Tambah 50 porsi">+50</button>
+              </div>
+            </div>
+
+            ${isSatuan ? `
+              <div class="satuan-notice-badge" style="margin-bottom: 0.35rem;">
+                <span>⚡</span>
+                <span><strong>Eceran:</strong> ${item.pax} Porsi (Bebas tanpa minimal order).</span>
+              </div>
+            ` : ''}
+
+            ${dishes.length > 0 ? `
+              <div class="selected-dishes-box" style="margin-top: 0.25rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px;">
+                  <span class="selected-dishes-label" style="font-size: 10.5px;">Lauk & Sajian:</span>
+                  <button type="button" class="btn-edit-link" style="font-size: 10.5px; padding: 0 4px;" onclick="AishPOS.openCustomLaukModal(${idx})">
+                    ✏️ Kustom Lauk
+                  </button>
+                </div>
+                <div class="dishes-chips-list">
+                  ${dishes.map(d => `<span class="dish-chip">${d}</span>`).join('')}
+                </div>
+              </div>
+            ` : ''}
+
+            ${item.notes ? `
+              <div class="cart-item-notes" style="margin-top: 0.35rem;">
+                <span>🌾</span>
+                <span>${item.notes}</span>
+              </div>
+            ` : ''}
+
+            <div class="cart-item-subtotal-row" style="margin-top: 0.35rem; padding-top: 0.35rem; border-top: 1px dashed var(--border-light);">
+              <span style="color: #64748b; font-size: 11px;">Subtotal:</span>
+              <span class="cart-item-subtotal-val font-mono" style="font-weight: 700; color: #166534; font-size: 13px;">${formatIDR(itemSubtotal)}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
     }
 
-    // Satuan notice badge
-    if (satuanNotice) {
-      const isSatuan = item.pax < (item.minPax || 25);
-      satuanNotice.style.display = isSatuan ? 'flex' : 'none';
-      if (isSatuan) {
-        satuanNotice.innerHTML = `<span>⚡</span><span><strong>Pesanan Satuan / Eceran:</strong> ${item.pax} Porsi (Bebas tanpa minimal order).</span>`;
+    // Complementary banner
+    if (compBanner) {
+      const compItems = cartList.filter(it => it.complementary).map(it => it.complementary);
+      if (compItems.length > 0) {
+        compBanner.style.display = 'flex';
+        document.getElementById('cartCompText').textContent = compItems[0];
+      } else {
+        compBanner.style.display = 'none';
       }
     }
 
-    document.getElementById('cartItemSubtotal').textContent = formatIDR(fin.itemSubtotal);
-
-    // Selected dishes chips
-    const dishesListContainer = document.getElementById('cartDishesList');
-    if (dishesListContainer) {
-      dishesListContainer.innerHTML = (item.defaultLauk || [])
-        .map(dish => `<span class="dish-chip">${dish}</span>`)
-        .join('');
-    }
-
-    // Notes
-    const notesEl = document.getElementById('cartItemNotes');
-    if (notesEl) {
-      notesEl.textContent = item.notes || 'Catatan standar catering';
-    }
-
-    // Complementary text
-    const compEl = document.getElementById('cartCompText');
-    if (compEl) {
-      compEl.textContent = item.complementary || 'FREE COMPLEMENTARY: Peralatan Buffet Standar';
-    }
-
-    // Subtotal Menu (N Pax)
-    document.getElementById('billSubtotalLabel').textContent = `Subtotal Menu (${item.pax} Pax)`;
+    // Subtotal Menu (N Pax • M Menu)
+    document.getElementById('billSubtotalLabel').textContent = `Subtotal Menu (${fin.totalPax} Pax • ${cartList.length} Menu)`;
     document.getElementById('billSubtotalVal').textContent = formatIDR(fin.itemSubtotal);
     document.getElementById('billDeliveryVal').textContent = formatIDR(fin.deliveryFee);
     document.getElementById('billTaxVal').textContent = formatIDR(fin.taxPB1);
@@ -312,7 +412,8 @@ const AishPOS = (() => {
     });
 
     grid.innerHTML = filtered.map(item => {
-      const isCurrentInCart = state.cartItem && state.cartItem.id === item.id;
+      const inCart = (state.cart || []).find(c => c.id === item.id);
+      const isCurrentInCart = !!inCart;
       return `
         <div class="menu-card" data-id="${item.id}">
           <div class="menu-card-image-wrap">
@@ -344,7 +445,7 @@ const AishPOS = (() => {
                 </div>
               </div>
               <button class="btn-select-menu ${isCurrentInCart ? 'added' : ''}" onclick="AishPOS.selectCatalogItem('${item.id}')">
-                ${isCurrentInCart ? '✓ Terpilih' : '+ Pilih'}
+                ${isCurrentInCart ? `✓ ${inCart.pax} ${item.unit ? item.unit.replace('/', '') : 'pax'}` : '+ Pilih'}
               </button>
             </div>
           </div>
@@ -581,66 +682,70 @@ const AishPOS = (() => {
       const item = catalogData.find(i => i.id === itemId);
       if (!item) return;
 
-      const currentPax = state.cartItem ? state.cartItem.pax : 1;
-      state.cartItem = {
-        ...item,
-        pax: currentPax > 0 ? currentPax : 1
-      };
-
-      // Auto-set kurir delivery fee if pax <= 10
-      if (state.cartItem.pax <= 10 && state.deliveryType === 'buffet') {
-        state.deliveryType = 'kurir';
-        state.deliveryFee = 20000;
+      const addPax = item.minPax && item.minPax > 1 ? item.minPax : 25;
+      if (typeof AishCart !== 'undefined') {
+        const existing = (state.cart || []).find(c => c.id === item.id);
+        state.cart = AishCart.addItem(state.cart, item, addPax);
+        if (existing) {
+          showToast(`Porsi "${item.name}" bertambah +${addPax} ${item.unit ? item.unit.replace('/', '') : 'pax'}!`);
+        } else {
+          showToast(`Menu "${item.name}" dimasukkan ke keranjang!`);
+        }
+      } else {
+        const existing = (state.cart || []).find(c => c.id === item.id);
+        if (existing) {
+          existing.pax += addPax;
+        } else {
+          state.cart.push({
+            ...item,
+            pax: addPax,
+            defaultLauk: [...(item.defaultLauk || [])],
+            customLauk: [...(item.defaultLauk || [])]
+          });
+        }
       }
 
       renderCatalog();
       renderCart();
-      showToast(`Menu "${item.name}" dimasukkan ke keranjang!`);
     },
 
-    // Stepper control (Supports Satuan / Any Porsi)
-    adjustPax: (delta) => {
-      if (!state.cartItem) return;
-      const current = Number(state.cartItem.pax) || 1;
+    // Stepper control (Supports Satuan / Any Porsi per item)
+    adjustPax: (delta, itemIndex = 0) => {
+      if (!state.cart || !state.cart[itemIndex]) return;
+      const current = Number(state.cart[itemIndex].pax) || 1;
       const newPax = current + delta;
       if (newPax <= 0) {
-        AishPOS.removeCartItem();
+        AishPOS.removeCartItem(itemIndex);
         return;
       }
-      state.cartItem.pax = newPax;
+      state.cart[itemIndex].pax = newPax;
       renderCart();
     },
 
     // Direct input number of pax
-    setPaxDirect: (val) => {
-      if (!state.cartItem) return;
+    setPaxDirect: (val, itemIndex = 0) => {
+      if (!state.cart || !state.cart[itemIndex]) return;
       const parsed = parseInt(val, 10);
-      if (isNaN(parsed) || parsed <= 0) {
-        state.cartItem.pax = 1;
-      } else {
-        state.cartItem.pax = parsed;
-      }
+      state.cart[itemIndex].pax = (isNaN(parsed) || parsed <= 0) ? 1 : parsed;
       renderCart();
     },
 
     // Quick chips (+5, +10, +25, +50, etc.)
-    addPaxShortcut: (amount) => {
-      if (!state.cartItem) return;
-      state.cartItem.pax = (Number(state.cartItem.pax) || 0) + amount;
+    addPaxShortcut: (amount, itemIndex = 0) => {
+      if (!state.cart || !state.cart[itemIndex]) return;
+      state.cart[itemIndex].pax = (Number(state.cart[itemIndex].pax) || 0) + amount;
       renderCart();
-      showToast(`Porsi bertambah +${amount} Pax (${state.cartItem.pax} Pax)`);
+      showToast(`Porsi "${state.cart[itemIndex].name}" bertambah +${amount} Pax (${state.cart[itemIndex].pax} Pax)`);
     },
 
     // Hapus Item / Kosongkan Keranjang
-    removeCartItem: () => {
-      if (!state.cartItem) return;
-      const itemName = state.cartItem.name;
-      if (confirm(`Apakah Anda yakin ingin menghapus "${itemName}" dari keranjang pesanan?`)) {
-        state.cartItem = null;
-        renderCatalog();
-        renderCart();
-        showToast('Item berhasil dihapus dari keranjang.', 'info');
-      }
+    removeCartItem: (itemIndex = 0) => {
+      if (!state.cart || !state.cart[itemIndex]) return;
+      const itemName = state.cart[itemIndex].name;
+      state.cart.splice(itemIndex, 1);
+      renderCatalog();
+      renderCart();
+      showToast(`"${itemName}" berhasil dihapus dari keranjang.`, 'info');
     },
 
     // Set Tipe Pengiriman (Buffet, Kurir, Ambil Sendiri)
@@ -684,11 +789,14 @@ const AishPOS = (() => {
     },
 
     // Custom Lauk / Extra Items Modal
-    openCustomLaukModal: () => {
-      if (!state.cartItem) {
+    openCustomLaukModal: (itemIndex = 0) => {
+      if (!state.cart || state.cart.length === 0 || !state.cart[itemIndex]) {
         showToast('Pilih menu di katalog terlebih dahulu!', 'warning');
         return;
       }
+
+      state.editingCustomLaukIndex = itemIndex;
+      const currentItem = state.cart[itemIndex];
 
       const listContainer = document.getElementById('customDishesChecklist');
       const allAvailableOptions = [
@@ -707,7 +815,7 @@ const AishPOS = (() => {
         'Asinan Buah Bogor'
       ];
 
-      const currentLauk = state.cartItem.defaultLauk || [];
+      const currentLauk = currentItem.customLauk || currentItem.defaultLauk || [];
 
       listContainer.innerHTML = allAvailableOptions.map(dish => {
         const isChecked = currentLauk.some(l => dish.toLowerCase().includes(l.toLowerCase()));
@@ -719,25 +827,27 @@ const AishPOS = (() => {
         `;
       }).join('');
 
-      document.getElementById('customNotesInput').value = state.cartItem.notes || '';
+      document.getElementById('customNotesInput').value = currentItem.notes || '';
       document.getElementById('modalCustomLauk').classList.add('active');
     },
 
     saveCustomLauk: () => {
-      if (!state.cartItem) return;
+      const idx = state.editingCustomLaukIndex || 0;
+      if (!state.cart || !state.cart[idx]) return;
+
       const checked = [];
       document.querySelectorAll('#customDishesChecklist input[type="checkbox"]:checked').forEach(cb => {
         checked.push(cb.value);
       });
 
       if (checked.length > 0) {
-        state.cartItem.defaultLauk = checked;
+        state.cart[idx].customLauk = checked;
       }
-      state.cartItem.notes = document.getElementById('customNotesInput').value;
+      state.cart[idx].notes = document.getElementById('customNotesInput').value;
 
       document.getElementById('modalCustomLauk').classList.remove('active');
       renderCart();
-      showToast('Kustomisasi menu lauk acara berhasil disimpan!');
+      showToast(`Kustomisasi lauk untuk "${state.cart[idx].name}" berhasil disimpan!`);
     },
 
     // Food Tasting Scheduler Modal

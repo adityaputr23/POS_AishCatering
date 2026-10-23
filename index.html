@@ -696,67 +696,11 @@
             <p>Silakan klik tombol <strong>+ Pilih</strong> pada katalog di sebelah kiri untuk memasukkan pesanan.</p>
           </div>
 
-          <!-- Active Cart Item Card -->
-          <div class="cart-item-card" id="cartActiveItemCard">
-            <div class="cart-item-top">
-              <div>
-                <span class="cart-item-cat" id="cartItemCategory">PRASMANAN BUFFET</span>
-                <h4 class="cart-item-name" id="cartItemName">Paket Prasmanan Royal Nusantara</h4>
-                <span class="cart-item-unit-price" id="cartItemUnitPrice">Rp 65.000 / pax</span>
-              </div>
-              <button class="btn-remove-item" title="Hapus paket dari keranjang" onclick="AishPOS.removeCartItem()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="3 6 5 6 21 6"></polyline>
-                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                </svg>
-              </button>
-            </div>
-
-            <!-- Pax Stepper & Shortcut Chips -->
-            <div class="stepper-control-row">
-              <div class="pax-stepper">
-                <button class="stepper-btn" onclick="AishPOS.adjustPax(-1)" title="Kurangi 1 Porsi">−</button>
-                <div class="stepper-input-wrap">
-                  <input type="number" id="cartPaxInput" class="stepper-input" min="1" step="1" value="150" oninput="AishPOS.setPaxDirect(this.value)" title="Ketik jumlah porsi langsung">
-                  <span class="stepper-unit-label">Pax</span>
-                </div>
-                <button class="stepper-btn" onclick="AishPOS.adjustPax(1)" title="Tambah 1 Porsi">+</button>
-              </div>
-              <div class="stepper-shortcuts">
-                <button class="chip-stepper chip-satuan" onclick="AishPOS.setPaxDirect(1)" title="Pesan Satuan (1 Porsi)">1 Porsi</button>
-                <button class="chip-stepper" onclick="AishPOS.addPaxShortcut(5)" title="Tambah 5 porsi">+5</button>
-                <button class="chip-stepper" onclick="AishPOS.addPaxShortcut(10)" title="Tambah 10 porsi">+10</button>
-                <button class="chip-stepper" onclick="AishPOS.addPaxShortcut(25)" title="Tambah 25 porsi">+25</button>
-                <button class="chip-stepper" onclick="AishPOS.addPaxShortcut(50)" title="Tambah 50 porsi">+50</button>
-              </div>
-            </div>
-
-            <!-- Satuan / Eceran Notice Badge -->
-            <div id="cartSatuanNotice" class="satuan-notice-badge" style="display: none;">
-              <span>⚡</span>
-              <span><strong>Pesanan Satuan / Eceran:</strong> Bebas pesan mulai 1 porsi.</span>
-            </div>
-
-            <!-- Selected Dishes List -->
-            <div class="selected-dishes-box">
-              <div class="selected-dishes-label">Lauk & Sajian Terpilih:</div>
-              <div class="dishes-chips-list" id="cartDishesList">
-                <!-- Dynamically populated -->
-              </div>
-            </div>
-
-            <!-- Custom notes -->
-            <div class="cart-item-notes">
-              <span>🌾</span>
-              <span id="cartItemNotes">Sambal dipisah, tanpa MSG, sediakan 2 m...</span>
-            </div>
-
-            <!-- Item Subtotal -->
-            <div class="cart-item-subtotal-row">
-              <span style="color: #64748b;">Sub-kalkulasi Item:</span>
-              <span class="cart-item-subtotal-val" id="cartItemSubtotal">Rp 9.750.000</span>
-            </div>
+          <!-- Multi-Item Cart Container -->
+          <div class="cart-items-container" id="cartItemsContainer">
+            <!-- Dynamically rendered by renderCart() -->
           </div>
+
 
           <!-- Free Complementary Banner -->
           <div class="complementary-banner" id="cartCompBanner">
@@ -1318,6 +1262,7 @@
   <script src="js/auth.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/toast.js"></script>
+  <script src="js/cart.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

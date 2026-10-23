@@ -1118,6 +1118,13 @@ input, select, textarea {
 }
 
 /* Cart Item Container */
+.cart-items-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin-bottom: 0.75rem;
+}
+
 .cart-item-card {
   border: 1px solid var(--border-light);
   border-radius: var(--radius-sm);
