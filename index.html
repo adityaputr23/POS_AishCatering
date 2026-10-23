@@ -156,6 +156,19 @@
               </div>
               <span class="badge-dot-orange" title="Pesanan dapur aktif"></span>
             </a>
+
+            <a href="#" class="nav-item" id="navStaffItem" data-view="staff" style="display: none;" onclick="AishPOS.switchView('staff'); return false;">
+              <div class="nav-item-content">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+                <span>Kelola Staf</span>
+              </div>
+              <span class="nav-badge-pill badge-gold">Admin</span>
+            </a>
           </nav>
         </div>
 
@@ -451,6 +464,106 @@
                 <span class="nav-badge-pill badge-count" style="background:#ffedd5; color:#c2410c;">1</span>
               </div>
               <div class="kds-card-list" id="kdsColKirim"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= VIEW 5: MANAJEMEN STAF (ADMIN ONLY) ================= -->
+        <div id="view-staff" class="view-panel">
+          <div class="catalog-header-row">
+            <div class="catalog-title-group">
+              <div class="catalog-icon-box" style="background: rgba(168, 85, 247, 0.15); color: #c084fc; border-color: rgba(168, 85, 247, 0.3);">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+              </div>
+              <div class="catalog-text">
+                <h2>
+                  Manajemen Staf & Hak Akses
+                  <span class="sync-badge" style="background: rgba(168, 85, 247, 0.2); color: #d8b4fe;">Khusus Admin</span>
+                </h2>
+                <p>Registrasi akun staf baru, atur peran kasir/dapur, dan kendalikan akses operasional</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="staff-workspace-grid">
+            <!-- Left Card: Form Registrasi Staf Baru -->
+            <div class="staff-form-card">
+              <div class="staff-card-header">
+                <span class="staff-card-icon">➕</span>
+                <div>
+                  <h3>Registrasi Staf Baru</h3>
+                  <p>Daftarkan akun staf baru untuk operasional catering</p>
+                </div>
+              </div>
+
+              <form id="formRegisterStaff" onsubmit="AishPOS.handleRegisterStaff(event); return false;">
+                <div class="form-group-staff">
+                  <label for="regStaffName">Nama Lengkap Staf</label>
+                  <input type="text" id="regStaffName" placeholder="Contoh: Dewi Rahmawati" required autocomplete="off">
+                </div>
+
+                <div class="form-group-staff">
+                  <label for="regStaffUsername">Nama Pengguna (Username Login)</label>
+                  <input type="text" id="regStaffUsername" placeholder="Contoh: dewi_kasir" required autocomplete="off">
+                </div>
+
+                <div class="form-group-staff">
+                  <label for="regStaffRole">Peran / Hak Akses (Role)</label>
+                  <select id="regStaffRole" required>
+                    <option value="kasir">Kasir (Transaksi POS, Invoice & Jadwal Acara)</option>
+                    <option value="dapur">Dapur (Kitchen Display System & Antrean)</option>
+                    <option value="admin">Administrator (Akses Penuh & Kelola Staf)</option>
+                  </select>
+                </div>
+
+                <div class="form-group-staff">
+                  <label for="regStaffPassword">Kata Sandi / PIN Masuk</label>
+                  <input type="password" id="regStaffPassword" placeholder="Minimal 4 karakter" required autocomplete="new-password">
+                </div>
+
+                <button type="submit" class="btn-register-submit">
+                  <span>Daftarkan Staf Baru</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                  </svg>
+                </button>
+              </form>
+            </div>
+
+            <!-- Right Card: Tabel Daftar Staf Aktif -->
+            <div class="staff-list-card">
+              <div class="staff-card-header">
+                <span class="staff-card-icon">👥</span>
+                <div>
+                  <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <h3>Daftar Staf Aktif</h3>
+                    <span class="nav-badge-pill badge-count" id="staffCountBadge">0 Staf</span>
+                  </div>
+                  <p>Semua akun operasional yang terdaftar di sistem Aish Catering</p>
+                </div>
+              </div>
+
+              <div class="staff-table-wrapper">
+                <table class="staff-data-table">
+                  <thead>
+                    <tr>
+                      <th>Staf</th>
+                      <th>Username</th>
+                      <th>Peran / Role</th>
+                      <th>Terdaftar</th>
+                      <th style="text-align: right;">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="staffTableBody">
+                    <!-- Dinamis terisi oleh renderStaffView() -->
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>

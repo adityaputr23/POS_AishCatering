@@ -655,6 +655,15 @@ const AishPOS = (() => {
       if (viewName === 'schedule') renderEventsTable();
       if (viewName === 'invoices') renderInvoicesTable();
       if (viewName === 'kitchen') renderKitchenDisplay();
+      if (viewName === 'staff') {
+        const user = (typeof AishAuth !== 'undefined') ? AishAuth.getCurrentUser() : null;
+        if (!user || user.role !== 'admin') {
+          showToast('Menu Kelola Staf hanya dapat diakses oleh Administrator!', 'warning');
+          AishPOS.switchView('pos');
+          return;
+        }
+        AishPOS.renderStaffView();
+      }
     },
 
     // Select Item from Catalog into Cart
@@ -1226,6 +1235,114 @@ const AishPOS = (() => {
     toggleUserDropdown: () => {
       const wrapper = document.querySelector('.user-profile-wrapper');
       if (wrapper) wrapper.classList.toggle('active');
+    },
+
+    // Render Staff Table (Admin View)
+    renderStaffView: () => {
+      const tbody = document.getElementById('staffTableBody');
+      const badge = document.getElementById('staffCountBadge');
+      if (!tbody || typeof AishAuth === 'undefined') return;
+
+      const staffList = AishAuth.getStaffList();
+      const currentUser = AishAuth.getCurrentUser();
+
+      if (badge) {
+        badge.textContent = `${staffList.length} Staf Terdaftar`;
+      }
+
+      tbody.innerHTML = staffList.map(staf => {
+        const isSelf = currentUser && currentUser.id === staf.id;
+        const roleClass = staf.role.toLowerCase();
+        const roleLabel = staf.role.toUpperCase();
+
+        let avatarBg = 'background: rgba(16, 185, 129, 0.2); color: #34d399;';
+        if (staf.role === 'admin') avatarBg = 'background: rgba(168, 85, 247, 0.2); color: #c084fc;';
+        if (staf.role === 'dapur') avatarBg = 'background: rgba(245, 158, 11, 0.2); color: #fbbf24;';
+
+        return `
+          <tr>
+            <td>
+              <div class="staff-profile-cell">
+                <div class="staff-table-avatar" style="${avatarBg}">
+                  ${staf.avatar || staf.name.slice(0, 2).toUpperCase()}
+                </div>
+                <div>
+                  <div class="staff-table-name">${staf.name}</div>
+                  ${isSelf ? '<span style="font-size: 10px; color: #10b981; font-weight: 600;">(Sesi Anda Saat Ini)</span>' : ''}
+                </div>
+              </div>
+            </td>
+            <td>
+              <code style="font-family: var(--font-mono); color: #94a3b8; font-size: 11.5px;">@${staf.username}</code>
+            </td>
+            <td>
+              <span class="role-badge-tag ${roleClass}">${roleLabel}</span>
+            </td>
+            <td style="color: #64748b; font-size: 11.5px;">
+              ${staf.createdAt || '2026-10-01'}
+            </td>
+            <td style="text-align: right;">
+              ${isSelf ? `
+                <span style="font-size: 11px; color: #64748b; font-style: italic;">Aktif</span>
+              ` : `
+                <button type="button" class="btn-delete-staff" onclick="AishPOS.handleDeleteStaff('${staf.id}')" title="Hapus akun staf ini">
+                  🗑️ Hapus
+                </button>
+              `}
+            </td>
+          </tr>
+        `;
+      }).join('');
+    },
+
+    // Handle New Staff Registration Submission
+    handleRegisterStaff: (e) => {
+      if (e && e.preventDefault) e.preventDefault();
+      const nameEl = document.getElementById('regStaffName');
+      const usernameEl = document.getElementById('regStaffUsername');
+      const roleEl = document.getElementById('regStaffRole');
+      const passEl = document.getElementById('regStaffPassword');
+
+      const name = nameEl ? nameEl.value.trim() : '';
+      const username = usernameEl ? usernameEl.value.trim() : '';
+      const role = roleEl ? roleEl.value : 'kasir';
+      const password = passEl ? passEl.value : '';
+
+      if (typeof AishAuth === 'undefined') {
+        showToast('Modul autentikasi belum siap!', 'warning');
+        return;
+      }
+
+      const res = AishAuth.registerStaff({ name, username, role, password });
+      if (!res.success) {
+        showToast(res.message, 'warning');
+        return;
+      }
+
+      // Reset Form
+      if (nameEl) nameEl.value = '';
+      if (usernameEl) usernameEl.value = '';
+      if (passEl) passEl.value = '';
+      if (roleEl) roleEl.value = 'kasir';
+
+      AishPOS.renderStaffView();
+      showToast(res.message, 'success');
+    },
+
+    // Handle Delete Staff
+    handleDeleteStaff: (userId) => {
+      if (typeof AishAuth === 'undefined') return;
+
+      if (confirm('Apakah Anda yakin ingin menghapus akun staf ini secara permanen?')) {
+        const res = AishAuth.deleteStaff(userId);
+        if (!res.success) {
+          showToast(res.message, 'warning');
+          return;
+        }
+
+        AishPOS.renderStaffView();
+        showToast(res.message, 'info');
+      }
     },
 
     closeModal: (modalId) => {
