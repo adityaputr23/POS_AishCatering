@@ -117,116 +117,16 @@ const AishPOS = (() => {
     }
   ];
 
-  // Schedule & Event Management Mock Data
-  const eventsData = [
-    {
-      inv: 'INV-2025/V/092',
-      customer: 'Hj. Nurlaila Fitri',
-      phone: '0812-9843-2211',
-      date: '24 Mei 2025',
-      time: '10:30 WIB',
-      venue: 'Graha Mandiri Lt. 3 Ballroom, Jakarta Pusat',
-      package: 'Paket Prasmanan Royal Nusantara',
-      pax: 150,
-      total: 11075000,
-      paid: 5537500,
-      status: 'dp',
-      statusText: 'DP Masuk'
-    },
-    {
-      inv: 'INV-2025/V/088',
-      customer: 'PT. Telkom Akses (Bp. Hendra)',
-      phone: '0811-234-981',
-      date: '21 Okt 2026',
-      time: '12:00 WIB',
-      venue: 'Gedung Menara Multimedia Lt. 12',
-      package: 'Nasi Box Premium Rendang',
-      pax: 200,
-      total: 9240000,
-      paid: 9240000,
-      status: 'masak',
-      statusText: 'Siap Masak'
-    },
-    {
-      inv: 'INV-2025/V/085',
-      customer: 'dr. Farhan & dr. Amanda',
-      phone: '0813-8821-4400',
-      date: '21 Okt 2026',
-      time: '18:30 WIB',
-      venue: 'Balai Samudera Kelapa Gading',
-      package: 'Paket Wedding Elegance',
-      pax: 600,
-      total: 69000000,
-      paid: 69000000,
-      status: 'lunas',
-      statusText: 'Lunas'
-    },
-    {
-      inv: 'INV-2025/V/084',
-      customer: 'Keluarga Bp. Supriatna',
-      phone: '0857-1122-3344',
-      date: '21 Okt 2026',
-      time: '09:00 WIB',
-      venue: 'Perum Villa Bintaro Regency D2/14',
-      package: 'Tumpeng Megah Syukuran',
-      pax: 30,
-      total: 1685000,
-      paid: 1685000,
-      status: 'kirim',
-      statusText: 'Siap Kirim'
-    },
-    {
-      inv: 'INV-2025/V/079',
-      customer: 'Yayasan Al-Ikhlas',
-      phone: '0812-7766-5544',
-      date: '22 Okt 2026',
-      time: '15:30 WIB',
-      venue: 'Masjid Agung Al-Azhar Kebayoran',
-      package: 'Snack Box Tradisional 4 Macam',
-      pax: 250,
-      total: 5125000,
-      paid: 2500000,
-      status: 'dp',
-      statusText: 'DP Masuk'
-    }
-  ];
+  // Storage & State helpers
+  let eventsData = (typeof AishStorage !== 'undefined') ? AishStorage.getEvents() : [];
+  let kitchenOrders = (typeof AishStorage !== 'undefined') ? AishStorage.getKitchenOrders() : [];
 
-  // Kitchen KDS Order Tickets
-  const kitchenOrders = [
-    {
-      id: 'KDS-088',
-      inv: 'INV-2025/V/088',
-      client: 'PT. Telkom Akses',
-      time: '12:00 WIB (Kirim 10:45)',
-      menu: '200 Pax Nasi Box Rendang',
-      subItems: ['Rendang Daging Sapi (200 pcs)', 'Telur Balado (200 butir)', 'Tumis Buncis Jagung', 'Packing Box Kraft + Stiker'],
-      stage: 'masak',
-      badge: 'Sedang Diolah',
-      urgency: 'high'
-    },
-    {
-      id: 'KDS-084',
-      inv: 'INV-2025/V/084',
-      client: 'Keluarga Bp. Supriatna',
-      time: '09:00 WIB (Berangkat 08:30)',
-      menu: '1 Set Tumpeng Megah 30 Pax',
-      subItems: ['Garnish & Hiasan Wortel/Cabe Selesai', 'Ayam Bakar Madu 30 ptg', 'Plating Tampah Bambu Daun Pisang'],
-      stage: 'kirim',
-      badge: 'Siap Kirim',
-      urgency: 'ready'
-    },
-    {
-      id: 'KDS-092',
-      inv: 'INV-2025/V/092',
-      client: 'Hj. Nurlaila Fitri',
-      time: 'Sabtu, 24 Mei 2025 - 10:30 WIB',
-      menu: '150 Pax Prasmanan Royal',
-      subItems: ['Bumbu Marinate Rendang', 'Persiapan Chafing Dish & Roll Top', 'Jadwal Muat Armada Box 02'],
-      stage: 'antrean',
-      badge: 'Antrean Produksi',
-      urgency: 'normal'
+  function refreshStorageState() {
+    if (typeof AishStorage !== 'undefined') {
+      eventsData = AishStorage.getEvents();
+      kitchenOrders = AishStorage.getKitchenOrders();
     }
-  ];
+  }
 
   // Active Transaction State
   let state = {
@@ -582,7 +482,12 @@ const AishPOS = (() => {
       renderInvoicesTable();
       renderKitchenDisplay();
 
-      // Inisialisasi Autentikasi Staf & Sesi
+      // Inisialisasi Storage Engine & Sesi
+      if (typeof AishStorage !== 'undefined') {
+        AishStorage.init();
+        refreshStorageState();
+      }
+
       if (typeof AishAuth !== 'undefined') {
         AishAuth.init();
         AishPOS.syncAuthUI();
@@ -903,14 +808,17 @@ const AishPOS = (() => {
 
       // Add to events history or update
       const existing = eventsData.find(e => e.inv === state.invoiceNumber);
+      let targetEvent;
+
       if (existing) {
         existing.paid = (existing.paid || 0) + state.tenderPaidInput;
         if (existing.paid >= existing.total) {
           existing.status = 'lunas';
           existing.statusText = 'Lunas';
         }
+        targetEvent = existing;
       } else {
-        eventsData.unshift({
+        targetEvent = {
           inv: state.invoiceNumber,
           customer: state.customer.name,
           phone: state.customer.phone,
@@ -923,11 +831,21 @@ const AishPOS = (() => {
           paid: state.tenderPaidInput,
           status: state.tenderPaidInput >= fin.totalBill ? 'lunas' : 'dp',
           statusText: state.tenderPaidInput >= fin.totalBill ? 'Lunas' : 'DP Masuk'
-        });
+        };
+      }
+
+      // Simpan permanen transaksi & otomatisasi tiket dapur KDS
+      if (typeof AishStorage !== 'undefined') {
+        AishStorage.saveEvent(targetEvent);
+        if (!existing) {
+          AishStorage.createKitchenTicketFromOrder(targetEvent, state.cartItem);
+        }
+        refreshStorageState();
       }
 
       renderEventsTable();
       renderInvoicesTable();
+      renderKitchenDisplay();
       showToast(`Transaksi ${state.invoiceNumber} Berhasil Disimpan & Dicatat!`);
 
       // Automatically open receipt preview
@@ -1113,17 +1031,22 @@ const AishPOS = (() => {
     },
 
     advanceKds: (orderId) => {
-      const ord = kitchenOrders.find(o => o.id === orderId);
-      if (!ord) return;
-      if (ord.stage === 'antrean') {
-        ord.stage = 'masak';
-        ord.badge = 'Sedang Diolah';
-      } else if (ord.stage === 'masak') {
-        ord.stage = 'kirim';
-        ord.badge = 'Siap Kirim';
-      } else if (ord.stage === 'kirim') {
-        ord.stage = 'antrean';
-        ord.badge = 'Selesai / Terkirim';
+      if (typeof AishStorage !== 'undefined') {
+        AishStorage.advanceKitchenOrderStage(orderId);
+        refreshStorageState();
+      } else {
+        const ord = kitchenOrders.find(o => o.id === orderId);
+        if (!ord) return;
+        if (ord.stage === 'antrean') {
+          ord.stage = 'masak';
+          ord.badge = 'Sedang Diolah';
+        } else if (ord.stage === 'masak') {
+          ord.stage = 'kirim';
+          ord.badge = 'Siap Kirim';
+        } else if (ord.stage === 'kirim') {
+          ord.stage = 'antrean';
+          ord.badge = 'Selesai / Terkirim';
+        }
       }
       renderKitchenDisplay();
       showToast(`Status pesanan dapur ${orderId} diperbarui!`);
