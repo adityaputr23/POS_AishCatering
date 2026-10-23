@@ -568,6 +568,74 @@
           </div>
         </div>
 
+          <!-- ===== CARD: Cadangan Data & Arsip ===== -->
+          <div class="backup-section-card" id="backupSectionCard">
+            <div class="backup-card-header">
+              <div class="backup-header-left">
+                <div class="backup-icon-box">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                  </svg>
+                </div>
+                <div>
+                  <h3>Cadangan Data &amp; Arsip Sistem</h3>
+                  <p>Ekspor seluruh data transaksi, tiket KDS, dan akun staf ke file JSON untuk arsip lokal</p>
+                </div>
+              </div>
+              <div class="backup-info-badge">
+                <span>💡</span>
+                <span>Hanya Admin</span>
+              </div>
+            </div>
+
+            <div class="backup-actions-grid">
+              <!-- Backup Export Card -->
+              <div class="backup-action-card export-card">
+                <div class="backup-action-icon">📦</div>
+                <div class="backup-action-content">
+                  <h4>Unduh Backup Data</h4>
+                  <p>Ekspor semua data ke file <code>.json</code> bertanggal. Simpan di folder aman sebagai cadangan offline.</p>
+                  <div class="backup-stat-row" id="backupStatRow">
+                    <span class="backup-stat-chip" id="backupStatEvents">— Transaksi</span>
+                    <span class="backup-stat-chip" id="backupStatKds">— Tiket KDS</span>
+                    <span class="backup-stat-chip" id="backupStatStaff">— Staf</span>
+                  </div>
+                </div>
+                <button type="button" class="btn-backup-export" id="btnExportBackup" onclick="AishPOS.exportBackupData()">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                  </svg>
+                  <span>Unduh Backup JSON</span>
+                </button>
+              </div>
+
+              <!-- Reset Demo Card -->
+              <div class="backup-action-card reset-card">
+                <div class="backup-action-icon">🔄</div>
+                <div class="backup-action-content">
+                  <h4>Reset ke Data Demo</h4>
+                  <p>Hapus semua data saat ini dan kembalikan ke data bawaan untuk keperluan demo atau pelatihan staf.</p>
+                  <div class="backup-warning-note">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    <span>Tindakan ini tidak bisa dibatalkan!</span>
+                  </div>
+                </div>
+                <button type="button" class="btn-backup-reset" id="btnResetDemo" onclick="AishPOS.resetDemoData()">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="1 4 1 10 7 10"></polyline>
+                    <path d="M3.51 15a9 9 0 1 0 .49-3.5"></path>
+                  </svg>
+                  <span>Reset Data Demo</span>
+                </button>
+              </div>
+            </div>
+          </div>
+          <!-- ===== END CARD: Cadangan Data ===== -->
+
       </main>
 
       <!-- RIGHT RAIL: Keranjang Pesanan Acara & Tender Slip (400px Fixed) -->

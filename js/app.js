@@ -568,6 +568,7 @@ const AishPOS = (() => {
           return;
         }
         AishPOS.renderStaffView();
+        AishPOS.updateBackupStats();
       }
     },
 
@@ -1282,6 +1283,73 @@ const AishPOS = (() => {
     closeModal: (modalId) => {
       const el = document.getElementById(modalId);
       if (el) el.classList.remove('active');
+    },
+
+    // =========================================================
+    // Backup Export & Data Reset (Task 3: Admin Only)
+    // =========================================================
+
+    // Update stat chips on backup card
+    updateBackupStats: () => {
+      if (typeof AishStorage === 'undefined' || typeof AishAuth === 'undefined') return;
+      const backup = AishStorage.exportFullBackup();
+      const evEl = document.getElementById('backupStatEvents');
+      const kdsEl = document.getElementById('backupStatKds');
+      const stfEl = document.getElementById('backupStatStaff');
+      if (evEl) evEl.textContent = `${backup.events.length} Transaksi`;
+      if (kdsEl) kdsEl.textContent = `${backup.kitchenOrders.length} Tiket KDS`;
+      if (stfEl) stfEl.textContent = `${backup.staff.length} Staf`;
+    },
+
+    // Export full backup as downloadable JSON file
+    exportBackupData: () => {
+      if (typeof AishStorage === 'undefined') {
+        showToast('Modul penyimpanan belum siap!', 'warning');
+        return;
+      }
+      const backup = AishStorage.exportFullBackup();
+      const today = new Date();
+      const ymd = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      const filename = `backup-aish-pos-${ymd}.json`;
+
+      const jsonStr = JSON.stringify(backup, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      showToast(`✅ Backup berhasil diunduh: ${filename}`, 'success');
+    },
+
+    // Reset all data to default demo dataset
+    resetDemoData: () => {
+      if (typeof AishStorage === 'undefined') {
+        showToast('Modul penyimpanan belum siap!', 'warning');
+        return;
+      }
+      const confirmed = confirm(
+        'Apakah Anda yakin ingin mereset SEMUA data ke dataset demo bawaan?\n\n' +
+        '⚠️  Seluruh transaksi, tiket KDS, dan akun staf yang ditambahkan akan DIHAPUS secara permanen.\n\n' +
+        'Pastikan Anda telah mengunduh backup sebelum melanjutkan.'
+      );
+      if (!confirmed) return;
+
+      AishStorage.resetToDefault();
+      eventsData = AishStorage.getEvents();
+      kitchenOrders = AishStorage.getKitchenOrders();
+
+      renderEventsTable();
+      renderInvoicesTable();
+      renderKitchenDisplay();
+      AishPOS.updateBackupStats();
+
+      showToast('🔄 Data telah direset ke dataset demo bawaan.', 'info');
     }
   };
 })();
