@@ -381,21 +381,55 @@
         </div>
 
         <!-- ================= VIEW 3: KATALOG LENGKAP ================= -->
+        <!-- ================= VIEW 3: KATALOG LENGKAP ================= -->
         <div id="view-catalog" class="view-panel">
           <div class="view-header">
             <div class="view-header-title">
               <h2>Master Katalog Menu & Resep Catering</h2>
-              <p>Spesifikasi bahan, porsi minimum (Pax), standard operating procedures, dan variasi lauk.</p>
+              <p>Kelola daftar paket katering, harga porsi, komposisi lauk, dan status ketersediaan.</p>
+            </div>
+            <button class="btn-new-order" id="btnAddNewMenu" onclick="AishPOS.openAddMenuModal()">
+              <span>+</span>
+              <span>Tambah Menu Baru</span>
+            </button>
+          </div>
+
+          <!-- Catalog Master Toolbar -->
+          <div class="catalog-master-toolbar" style="display: flex; gap: 0.75rem; align-items: center; margin-bottom: 1rem; flex-wrap: wrap;">
+            <div class="global-search-container" style="max-width: 320px; flex: 1;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <input type="text" id="masterCatalogSearch" placeholder="Cari nama menu / lauk..." oninput="AishPOS.filterMasterCatalog()">
+            </div>
+            <div class="category-filter-bar" style="margin: 0; padding: 0; border: none; background: transparent;">
+              <button type="button" class="category-tab active" data-master-cat="Semua Menu" onclick="AishPOS.setMasterCatalogCategory('Semua Menu', this)">Semua</button>
+              <button type="button" class="category-tab" data-master-cat="Paket Prasmanan" onclick="AishPOS.setMasterCatalogCategory('Paket Prasmanan', this)">Prasmanan</button>
+              <button type="button" class="category-tab" data-master-cat="Nasi Kotak / Bento" onclick="AishPOS.setMasterCatalogCategory('Nasi Kotak / Bento', this)">Nasi Kotak</button>
+              <button type="button" class="category-tab" data-master-cat="Tumpeng" onclick="AishPOS.setMasterCatalogCategory('Tumpeng', this)">Tumpeng</button>
+              <button type="button" class="category-tab" data-master-cat="Snack Box" onclick="AishPOS.setMasterCatalogCategory('Snack Box', this)">Snack Box</button>
+              <button type="button" class="category-tab" data-master-cat="Gubukan / Stall" onclick="AishPOS.setMasterCatalogCategory('Gubukan / Stall', this)">Gubukan</button>
             </div>
           </div>
 
-          <div class="events-table-card" style="padding: 1.5rem;">
-            <p style="font-size: 13px; color: #475569; margin-bottom: 1rem;">
-              Setiap menu telah disesuaikan dengan resep otentik nusantara, menggunakan bahan premium bersertifikat Halal dan lolos uji higienitas BPOM.
-            </p>
-            <div class="menu-grid" style="grid-template-columns: repeat(3, 1fr);">
-              <!-- Will render catalog cards with details -->
-            </div>
+          <div class="events-table-card">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Menu / Paket</th>
+                  <th>Kategori</th>
+                  <th>Harga Satuan</th>
+                  <th>Min. Order</th>
+                  <th>Komposisi Lauk & Fasilitas</th>
+                  <th>Status</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="masterCatalogTableBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
           </div>
         </div>
 
@@ -1180,6 +1214,90 @@
           Selesai
         </button>
       </div>
+    </div>
+  <!-- 6. MODAL: Tambah / Edit Master Menu Catering -->
+  <div class="modal-backdrop" id="modalMenuForm">
+    <div class="modal-container" style="max-width: 580px;">
+      <div class="modal-header">
+        <div class="modal-header-title">
+          <span>🍱</span>
+          <span id="menuFormModalTitle">Tambah Menu Catering Baru</span>
+        </div>
+        <button type="button" class="btn-close-modal" onclick="AishPOS.closeModal('modalMenuForm')">✕</button>
+      </div>
+      <form onsubmit="AishPOS.saveMenuForm(event)">
+        <input type="hidden" id="menuFormId">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="menuFormName">Nama Menu / Paket</label>
+            <input type="text" id="menuFormName" class="form-input" placeholder="Contoh: Nasi Box Ayam Bakar Madu" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="menuFormCategory">Kategori</label>
+              <select id="menuFormCategory" class="form-select" required>
+                <option value="Paket Prasmanan">Paket Prasmanan</option>
+                <option value="Nasi Kotak / Bento">Nasi Kotak / Bento</option>
+                <option value="Tumpeng">Tumpeng</option>
+                <option value="Snack Box">Snack Box</option>
+                <option value="Gubukan / Stall">Gubukan / Stall</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="menuFormCategoryTag">Label Singkat (Badge)</label>
+              <input type="text" id="menuFormCategoryTag" class="form-input" placeholder="Contoh: Nasi Kotak" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="menuFormPrice">Harga Jual (Rp)</label>
+              <input type="number" id="menuFormPrice" class="form-input" min="0" step="500" placeholder="Contoh: 35000" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="menuFormUnit">Satuan</label>
+              <select id="menuFormUnit" class="form-select">
+                <option value="/pax">/pax (Porsi)</option>
+                <option value="/box">/box (Kotak)</option>
+                <option value="/set">/set (Tampah)</option>
+                <option value="/stall">/stall (Gubukan)</option>
+                <option value="/ekor">/ekor</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="menuFormMinPax">Min. Order</label>
+              <input type="number" id="menuFormMinPax" class="form-input" min="1" value="25" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="menuFormDefaultLauk">Komposisi Lauk & Sajian (Pisahkan dengan Koma)</label>
+            <input type="text" id="menuFormDefaultLauk" class="form-input" placeholder="Contoh: Nasi Liwet, Ayam Bakar, Sambal Goreng, Kerupuk, Lalap">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="menuFormComplementary">Fasilitas Gratis (Free Complementary)</label>
+            <input type="text" id="menuFormComplementary" class="form-input" placeholder="Contoh: FREE: 1 Cup Air Mineral per box">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="menuFormDescription">Deskripsi & Catatan Singkat</label>
+            <textarea id="menuFormDescription" class="form-textarea" rows="2" placeholder="Penjelasan kelezatan bahan, sertifikasi, atau panduan penyajian..."></textarea>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 13px;">
+              <input type="checkbox" id="menuFormIsAvailable" checked style="width: 16px; height: 16px; accent-color: var(--primary);">
+              <span><strong>Status: Tersedia</strong> (Dapat dipesan di Kasir POS)</span>
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-action-outline" onclick="AishPOS.closeModal('modalMenuForm')">Batal</button>
+          <button type="submit" class="btn-checkout-primary" style="height: 38px; padding: 0 1.25rem;">Simpan Menu</button>
+        </div>
+      </form>
     </div>
   </div>
 

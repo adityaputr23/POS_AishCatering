@@ -1782,6 +1782,20 @@ input, select, textarea {
 }
 .status-pill.batal .status-dot { background-color: var(--status-batal-text); }
 
+.status-pill.tersedia {
+  background-color: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+.status-pill.tersedia .status-dot { background-color: #166534; }
+
+.status-pill.habis {
+  background-color: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #cbd5e1;
+}
+.status-pill.habis .status-dot { background-color: #94a3b8; }
+
 /* Kitchen KDS Columns */
 .kds-board {
   display: grid;
