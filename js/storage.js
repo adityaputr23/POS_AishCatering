@@ -201,17 +201,38 @@ const AishStorage = (() => {
       return ord;
     },
 
-    createKitchenTicketFromOrder: (event, cartItem) => {
+    createKitchenTicketFromOrder: (event, cartItems) => {
       const list = readStorage(STORAGE_KEY_KITCHEN, defaultKitchenOrders);
       const randomSuffix = Math.floor(100 + Math.random() * 900);
       const ticketId = `KDS-${randomSuffix}`;
 
-      const dishes = cartItem && cartItem.defaultLauk && cartItem.defaultLauk.length > 0
-        ? cartItem.defaultLauk.map(l => `${l} (${cartItem.pax} porsi)`)
-        : ['Menu Catering Standar'];
+      let menuText = '';
+      let dishes = [];
 
-      if (cartItem && cartItem.notes) {
-        dishes.push(`Note: ${cartItem.notes}`);
+      if (Array.isArray(cartItems)) {
+        menuText = cartItems.map(it => `${it.pax} Pax ${it.name}`).join(' + ');
+        cartItems.forEach(it => {
+          const itemDishes = it.customLauk || it.defaultLauk || [];
+          if (itemDishes.length > 0) {
+            itemDishes.forEach(l => dishes.push(`${it.name}: ${l} (${it.pax} porsi)`));
+          } else {
+            dishes.push(`${it.name} (${it.pax} porsi)`);
+          }
+          if (it.notes) {
+            dishes.push(`Catatan (${it.name}): ${it.notes}`);
+          }
+        });
+      } else if (cartItems) {
+        menuText = `${cartItems.pax || 100} Pax ${cartItems.name || 'Paket Catering'}`;
+        dishes = cartItems.defaultLauk && cartItems.defaultLauk.length > 0
+          ? cartItems.defaultLauk.map(l => `${l} (${cartItems.pax} porsi)`)
+          : ['Menu Catering Standar'];
+        if (cartItems.notes) {
+          dishes.push(`Note: ${cartItems.notes}`);
+        }
+      } else {
+        menuText = 'Pesanan Catering';
+        dishes = ['Menu Catering Standar'];
       }
 
       const newTicket = {
@@ -219,7 +240,7 @@ const AishStorage = (() => {
         inv: event.inv,
         client: event.customer,
         time: `${event.date || 'Hari ini'} • ${event.time || '11:00 WIB'}`,
-        menu: `${cartItem ? cartItem.pax : 100} Pax ${cartItem ? cartItem.name : 'Paket Catering'}`,
+        menu: menuText,
         subItems: dishes,
         stage: 'antrean',
         badge: 'Antrean Produksi Baru',

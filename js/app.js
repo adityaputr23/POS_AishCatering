@@ -864,7 +864,7 @@ const AishPOS = (() => {
 
     // Checkout / Payment Modal
     openPaymentModal: () => {
-      if (!state.cartItem) {
+      if (!state.cart || state.cart.length === 0) {
         showToast('Keranjang masih kosong, silakan pilih menu terlebih dahulu!', 'warning');
         return;
       }
@@ -872,8 +872,12 @@ const AishPOS = (() => {
       const fin = getFinancials();
       state.tenderPaidInput = fin.amountDueNow;
 
+      const summaryText = typeof AishCart !== 'undefined'
+        ? AishCart.formatSummaryText(state.cart)
+        : state.cart.map(i => `${i.name} (${i.pax} pax)`).join(' + ');
+
       document.getElementById('payInvoiceCode').textContent = state.invoiceNumber;
-      document.getElementById('payCustomerSummary').textContent = `${state.customer.name} • ${state.cartItem.pax} Pax ${state.cartItem.name}`;
+      document.getElementById('payCustomerSummary').textContent = `${state.customer.name} • ${fin.totalPax} Pax • ${summaryText}`;
       document.getElementById('payTotalDue').textContent = formatIDR(fin.totalBill);
       document.getElementById('payChargeNow').textContent = formatIDR(fin.amountDueNow);
       document.getElementById('tenderAmountDisplay').textContent = formatIDR(state.tenderPaidInput);
@@ -921,6 +925,10 @@ const AishPOS = (() => {
       const fin = getFinancials();
       document.getElementById('modalPayment').classList.remove('active');
 
+      const packageSummary = typeof AishCart !== 'undefined'
+        ? AishCart.formatSummaryText(state.cart)
+        : state.cart.map(i => `${i.name} (${i.pax} pax)`).join(' + ');
+
       // Add to events history or update
       const existing = eventsData.find(e => e.inv === state.invoiceNumber);
       let targetEvent;
@@ -931,6 +939,7 @@ const AishPOS = (() => {
           existing.status = 'lunas';
           existing.statusText = 'Lunas';
         }
+        existing.items = JSON.parse(JSON.stringify(state.cart || []));
         targetEvent = existing;
       } else {
         targetEvent = {
@@ -940,12 +949,15 @@ const AishPOS = (() => {
           date: state.customer.date,
           time: state.customer.time,
           venue: state.customer.venue,
-          package: state.cartItem.name,
-          pax: state.cartItem.pax,
+          package: packageSummary,
+          pax: fin.totalPax,
           total: fin.totalBill,
           paid: state.tenderPaidInput,
           status: state.tenderPaidInput >= fin.totalBill ? 'lunas' : 'dp',
-          statusText: state.tenderPaidInput >= fin.totalBill ? 'Lunas' : 'DP Masuk'
+          statusText: state.tenderPaidInput >= fin.totalBill ? 'Lunas' : 'DP Masuk',
+          items: JSON.parse(JSON.stringify(state.cart || [])),
+          deliveryType: state.deliveryType,
+          financials: { ...fin }
         };
       }
 
@@ -953,7 +965,7 @@ const AishPOS = (() => {
       if (typeof AishStorage !== 'undefined') {
         AishStorage.saveEvent(targetEvent);
         if (!existing) {
-          AishStorage.createKitchenTicketFromOrder(targetEvent, state.cartItem);
+          AishStorage.createKitchenTicketFromOrder(targetEvent, state.cart);
         }
         refreshStorageState();
       }
