@@ -972,6 +972,14 @@ const AishPOS = (() => {
       document.getElementById('printPaidVal').textContent = formatIDR(fin.amountDueNow);
       document.getElementById('printRemainingVal').textContent = formatIDR(Math.max(0, fin.totalBill - fin.amountDueNow));
 
+      // Dynamic Operator Kasir Attribution
+      const currentUser = (typeof AishAuth !== 'undefined') ? AishAuth.getCurrentUser() : null;
+      const staffLabel = currentUser ? `${currentUser.name} (${currentUser.role.toUpperCase()})` : 'Kasir Operasional';
+      const attrEl = document.getElementById('printStaffAttribution');
+      if (attrEl) attrEl.textContent = staffLabel;
+      const timeEl = document.getElementById('printTimestamp');
+      if (timeEl) timeEl.textContent = new Date().toLocaleTimeString('id-ID') + ' WIB';
+
       document.getElementById('modalInvoice').classList.add('active');
     },
 
@@ -983,6 +991,9 @@ const AishPOS = (() => {
       }
       const slipWindow = window.open('', '_blank', 'width=420,height=600');
       const item = state.cartItem;
+      const currentUser = (typeof AishAuth !== 'undefined') ? AishAuth.getCurrentUser() : null;
+      const staffLabel = currentUser ? `${currentUser.name} (${currentUser.role.toUpperCase()})` : 'Kasir Operasional';
+
       const html = `
         <!DOCTYPE html>
         <html>
@@ -1022,7 +1033,7 @@ const AishPOS = (() => {
           <div>Armada Pengiriman: Box 02 (B 9182 PQA)</div>
           <hr/>
           <div style="text-align: center; font-size: 10px; margin-top: 15px;">
-            Dicetak: ${new Date().toLocaleTimeString()} WIB oleh Kasir Ratna
+            Dicetak: ${new Date().toLocaleTimeString('id-ID')} WIB oleh ${staffLabel}
           </div>
         </body>
         </html>
