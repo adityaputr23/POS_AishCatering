@@ -121,6 +121,40 @@ Dokumen ini merangkum seluruh pekerjaan pengembangan sistem POS Aish Catering ya
 - `024b0d5` feat(checkout): support multi-item persistence and KDS ticket generation
 - `760d295` feat(invoice): render multi-item invoice slips and fix historical invoice preview
 
+## Sprint 5: Master Katalog Menu & CRUD Admin
+**Tanggal:** 23 Oktober 2026  
+**Plan:** `docs/superpowers/plans/2026-10-23-pos-master-catalog-crud.md` *(diarsipkan)*  
+**Spec:** `docs/superpowers/specs/2026-10-23-pos-master-catalog-crud-design.md` *(diarsipkan)*
+
+### Yang Dibangun:
+- **`js/storage.js`** — Catalog Persistence Engine:
+  - `STORAGE_KEY_CATALOG` (`aish_catalog_v1`) dengan `defaultCatalog` 6 item
+  - `getCatalog()` — Baca katalog dari localStorage dengan seeding otomatis
+  - `saveCatalogItem()` — Simpan item baru atau update item yang sudah ada
+  - `deleteCatalogItem()` — Hapus item berdasarkan ID
+  - `toggleCatalogAvailability()` — Toggle status `isAvailable` (true/false)
+  - `exportFullBackup()` — Menyertakan array `catalog` dalam backup JSON
+- **`tests/storage.test.js`** — 1 test baru khusus catalog operations (get, save, toggle, delete), total 6 storage tests
+- **`index.html`** — Panel `#view-catalog`:
+  - Header dengan search input, category filter toolbar (6 kategori), tombol "+ Tambah Menu Baru"
+  - Responsive data table: kolom Menu, Kategori, Harga, Min. Order, Komposisi Lauk, Status, Aksi
+  - Modal `#modalMenuForm` untuk Tambah / Edit menu (10 field: nama, kategori, tag, harga, satuan, min. order, komposisi lauk, fasilitas, deskripsi, status ketersediaan)
+- **`css/style.css`** — Status pill `.tersedia` / `.habis`, card `.out-of-stock`, button `.disabled-stock`
+- **`js/app.js`** — Master Catalog CRUD Controller:
+  - `renderMasterCatalog()` — Render tabel admin dengan filter dan pencarian
+  - `openAddMenuModal()` / `openEditMenuModal(itemId)` — Buka form modal (kosong / pre-filled)
+  - `saveMenuForm(e)` — Validasi form + persist via `AishStorage.saveCatalogItem()`
+  - `deleteCatalogMenu(itemId)` — Hapus dengan konfirmasi dialog + hapus dari cart
+  - `toggleMenuAvailability(itemId)` — Toggle status via `AishStorage.toggleCatalogAvailability()`
+  - `filterMasterCatalog()` / `setMasterCatalogCategory()` — Filter tabel admin
+  - **Admin Guard**: semua mutasi hanya dapat diakses oleh `role === 'admin'`
+  - **POS Sync**: item `isAvailable: false` menampilkan "Stok Habis" badge, tombol "+ Pilih" disabled, `selectCatalogItem()` menolak item habis dengan warning toast
+
+### Commits:
+- `bfb001b` feat(storage): implement catalog persistence engine and unit tests
+- `52ec256` feat(ui): add master catalog table and menu form modal
+- `cc48891` feat(catalog): implement master catalog CRUD controller, admin guard, and POS sync
+
 ---
 
 ## Status Keseluruhan
@@ -128,10 +162,10 @@ Dokumen ini merangkum seluruh pekerjaan pengembangan sistem POS Aish Catering ya
 | Modul | Status | Tests |
 |---|---|---|
 | Auth (Login, Staf) | ✅ Selesai | 4 pass |
-| Storage (Persistensi, KDS, Backup) | ✅ Selesai | 5 pass |
+| Storage (Persistensi, KDS, Backup, Katalog) | ✅ Selesai | 6 pass |
 | UI Toast Notification | ✅ Selesai | 5 pass |
 | Multi-Item Cart & Invoice | ✅ Selesai | 5 pass |
-| **Total** | **✅ Semua Selesai** | **19/19 pass** |
+| **Total** | **✅ Semua Selesai** | **20/20 pass** |
 
 Build executable: `dist\Aish Catering POS-win32-x64` ✅
 
