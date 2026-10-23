@@ -129,3 +129,55 @@ test('AishStorage - Export backup and reset to default', () => {
   AishStorage.resetToDefault();
   assert.equal(AishStorage.getEvents().some(e => e.inv === 'INV-DUMMY'), false);
 });
+
+test('AishStorage - Catalog operations (get, save, toggle, delete)', () => {
+  localStorage.clear();
+  AishStorage.init();
+
+  // 1. Get default catalog
+  const catalog = AishStorage.getCatalog();
+  assert.ok(Array.isArray(catalog));
+  assert.equal(catalog.length >= 6, true);
+
+  // 2. Add new catalog item
+  const newItem = {
+    id: 'nasi-kebuli-kambing',
+    name: 'Nasi Kebuli Kambing Muda',
+    category: 'Nasi Kotak / Bento',
+    categoryTag: 'Nasi Kotak',
+    price: 48000,
+    unit: '/box',
+    minPax: 20,
+    isAvailable: true,
+    defaultLauk: ['Nasi Kebuli', 'Kambing Goreng', 'Acar Nanas']
+  };
+  AishStorage.saveCatalogItem(newItem);
+  const afterAdd = AishStorage.getCatalog();
+  assert.ok(afterAdd.some(i => i.id === 'nasi-kebuli-kambing'));
+
+  // 3. Update catalog item price
+  const updatedItem = {
+    ...newItem,
+    price: 52000
+  };
+  AishStorage.saveCatalogItem(updatedItem);
+  const afterUpdate = AishStorage.getCatalog().find(i => i.id === 'nasi-kebuli-kambing');
+  assert.equal(afterUpdate.price, 52000);
+
+  // 4. Toggle availability
+  assert.equal(afterUpdate.isAvailable !== false, true);
+  AishStorage.toggleCatalogAvailability('nasi-kebuli-kambing');
+  const afterToggle = AishStorage.getCatalog().find(i => i.id === 'nasi-kebuli-kambing');
+  assert.equal(afterToggle.isAvailable, false);
+
+  // 5. Delete catalog item
+  AishStorage.deleteCatalogItem('nasi-kebuli-kambing');
+  const afterDelete = AishStorage.getCatalog();
+  assert.equal(afterDelete.some(i => i.id === 'nasi-kebuli-kambing'), false);
+
+  // 6. Backup includes catalog
+  const backup = AishStorage.exportFullBackup();
+  assert.ok(backup.catalog);
+  assert.ok(Array.isArray(backup.catalog));
+});
+
