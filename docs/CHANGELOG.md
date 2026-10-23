@@ -86,6 +86,43 @@ Dokumen ini merangkum seluruh pekerjaan pengembangan sistem POS Aish Catering ya
 
 ---
 
+## Sprint 4: Multi-Item Cart & Historical Invoice Fix
+**Tanggal:** 23 Oktober 2026  
+**Plan:** `docs/superpowers/plans/2026-10-23-pos-multi-item-cart.md` *(diarsipkan)*  
+**Spec:** `docs/superpowers/specs/2026-10-23-pos-multi-item-cart-design.md` *(diarsipkan)*
+
+### Yang Dibangun:
+- **`js/cart.js`** — Modul `AishCart` untuk manajemen keranjang multi-menu:
+  - `addItem()` — Tambah menu baru atau akumulasi porsi menu yang sudah ada
+  - `updatePax()` — Update porsi/pax per item dengan validasi minimal 1
+  - `removeItem()` — Hapus item berdasarkan index
+  - `calculateFinancials()` — Kalkulasi subtotal gabungan seluruh item, ongkir (kurir/buffet/pickup), pajak PB1 10%, termin pembayaran (DP 30%, DP 50%, Lunas)
+  - `formatSummaryText()` — Generate string ringkasan gabungan multi-menu
+- **`tests/cart.test.js`** — 5 unit tests, semua pass
+- **Right Rail POS UI (`index.html`, `css/style.css`, `js/app.js`)**:
+  - `#cartItemsContainer` untuk merender daftar kartu multi-item
+  - Stepper jumlah porsi (- / + / direct input / quick chips +10, +25, +50) per item
+  - Tombol kustomisasi lauk per menu di dalam keranjang
+  - Tombol hapus (trash) per item
+  - Badge porsi satuan/eceran per item
+  - Filter katalog dan tombol katalog menunjukkan jumlah porsi yang sudah ada di keranjang
+- **Integrasi Checkout & KDS (`js/app.js`, `js/storage.js`)**:
+  - Modal pembayaran merangkum seluruh menu dan total porsi
+  - Persistensi order menyimpan array `items` lengkap ke `AishStorage`
+  - Tiket dapur (KDS) memuat seluruh daftar paket dan rincian lauk masing-masing
+- **Cetak Nota & WhatsApp (`js/app.js`)**:
+  - Tabel rincian nota invoice merender seluruh baris menu beserta subtotalnya
+  - Perbaikan bug "Lihat Nota": membuka nota riwayat invoice membaca data asli invoice tersebut, bukan data keranjang aktif
+  - Rincian pesan WhatsApp merinci seluruh menu yang dipesan
+
+### Commits:
+- `84dbf2f` feat(cart): add AishCart engine and unit tests
+- `3e98204` feat(ui): implement multi-item cart right-rail UI and catalog integration
+- `024b0d5` feat(checkout): support multi-item persistence and KDS ticket generation
+- `760d295` feat(invoice): render multi-item invoice slips and fix historical invoice preview
+
+---
+
 ## Status Keseluruhan
 
 | Modul | Status | Tests |
@@ -93,6 +130,8 @@ Dokumen ini merangkum seluruh pekerjaan pengembangan sistem POS Aish Catering ya
 | Auth (Login, Staf) | ✅ Selesai | 4 pass |
 | Storage (Persistensi, KDS, Backup) | ✅ Selesai | 5 pass |
 | UI Toast Notification | ✅ Selesai | 5 pass |
-| **Total** | **✅ Semua Selesai** | **14/14 pass** |
+| Multi-Item Cart & Invoice | ✅ Selesai | 5 pass |
+| **Total** | **✅ Semua Selesai** | **19/19 pass** |
 
 Build executable: `dist\Aish Catering POS-win32-x64` ✅
+
