@@ -979,36 +979,84 @@ const AishPOS = (() => {
       AishPOS.openInvoiceSlip(state.invoiceNumber);
     },
 
-    // Invoice & Receipt Slip Preview
+    // Invoice & Receipt Slip Preview (Supports multi-item and historical view)
     openInvoiceSlip: (invCode = state.invoiceNumber) => {
-      if (!state.cartItem) {
-        showToast('Keranjang masih kosong, pilih menu terlebih dahulu!', 'warning');
+      const currentInv = invCode || state.invoiceNumber;
+      const historyEvent = eventsData.find(e => e.inv === currentInv);
+
+      let orderCustomer = state.customer;
+      let orderItems = state.cart || [];
+      let fin = getFinancials();
+
+      if (historyEvent) {
+        orderCustomer = {
+          name: historyEvent.customer,
+          phone: historyEvent.phone,
+          date: historyEvent.date,
+          time: historyEvent.time,
+          venue: historyEvent.venue
+        };
+
+        if (Array.isArray(historyEvent.items) && historyEvent.items.length > 0) {
+          orderItems = historyEvent.items;
+        } else {
+          orderItems = [{
+            name: historyEvent.package,
+            pax: historyEvent.pax,
+            price: Math.round(historyEvent.total / (historyEvent.pax || 1)),
+            unit: '/pax',
+            defaultLauk: ['Menu Catering Standar'],
+            notes: ''
+          }];
+        }
+
+        if (historyEvent.financials) {
+          fin = {
+            ...historyEvent.financials,
+            amountDueNow: historyEvent.paid
+          };
+        } else {
+          fin = {
+            itemSubtotal: historyEvent.total,
+            deliveryFee: 0,
+            taxPB1: 0,
+            totalBill: historyEvent.total,
+            amountDueNow: historyEvent.paid
+          };
+        }
+      }
+
+      if (!orderItems || orderItems.length === 0) {
+        showToast('Tidak ada item dalam pesanan ini untuk dicetak!', 'warning');
         return;
       }
-      const fin = getFinancials();
-      const currentInv = invCode || state.invoiceNumber;
 
       document.getElementById('printInvNumber').textContent = currentInv;
       document.getElementById('printInvDate').textContent = new Date().toLocaleDateString('id-ID', {
         weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
       });
-      document.getElementById('printCustName').textContent = state.customer.name;
-      document.getElementById('printCustPhone').textContent = state.customer.phone;
-      document.getElementById('printCustEvent').textContent = `${state.customer.date} • ${state.customer.time}`;
-      document.getElementById('printCustVenue').textContent = state.customer.venue;
+      document.getElementById('printCustName').textContent = orderCustomer.name;
+      document.getElementById('printCustPhone').textContent = orderCustomer.phone;
+      document.getElementById('printCustEvent').textContent = `${orderCustomer.date} • ${orderCustomer.time}`;
+      document.getElementById('printCustVenue').textContent = orderCustomer.venue;
 
-      document.getElementById('printItemRow').innerHTML = `
-        <tr>
-          <td>
-            <strong>${state.cartItem.name}</strong>
-            <div style="font-size: 10.5px; color: #64748b;">${(state.cartItem.defaultLauk || []).join(', ')}</div>
-            <div style="font-size: 10px; color: #94a3b8; font-style: italic;">${state.cartItem.notes || ''}</div>
-          </td>
-          <td class="font-mono" style="text-align: center;">${state.cartItem.pax}</td>
-          <td class="font-mono" style="text-align: right;">${formatIDR(state.cartItem.price)}</td>
-          <td class="font-mono" style="text-align: right; font-weight: 700;">${formatIDR(fin.itemSubtotal)}</td>
-        </tr>
-      `;
+      // Render multi-row item table
+      document.getElementById('printItemRow').innerHTML = orderItems.map(item => {
+        const itemTotal = (Number(item.price) || 0) * (Number(item.pax) || 0);
+        const dishes = item.customLauk || item.defaultLauk || [];
+        return `
+          <tr>
+            <td>
+              <strong>${item.name}</strong>
+              ${dishes.length > 0 ? `<div style="font-size: 10.5px; color: #64748b;">${dishes.join(', ')}</div>` : ''}
+              ${item.notes ? `<div style="font-size: 10px; color: #94a3b8; font-style: italic;">${item.notes}</div>` : ''}
+            </td>
+            <td class="font-mono" style="text-align: center;">${item.pax} ${item.unit ? item.unit.replace('/', '') : 'pax'}</td>
+            <td class="font-mono" style="text-align: right;">${formatIDR(item.price)}</td>
+            <td class="font-mono" style="text-align: right; font-weight: 700;">${formatIDR(itemTotal)}</td>
+          </tr>
+        `;
+      }).join('');
 
       document.getElementById('printSubtotalVal').textContent = formatIDR(fin.itemSubtotal);
       document.getElementById('printDeliveryVal').textContent = formatIDR(fin.deliveryFee);
@@ -1028,16 +1076,30 @@ const AishPOS = (() => {
       document.getElementById('modalInvoice').classList.add('active');
     },
 
-    // Kitchen Slip Printer
+    // Kitchen Slip Printer (Multi-Item)
     printKitchenSlip: () => {
-      if (!state.cartItem) {
+      const items = state.cart || [];
+      if (items.length === 0) {
         showToast('Keranjang masih kosong, tidak ada pesanan untuk dicetak!', 'warning');
         return;
       }
       const slipWindow = window.open('', '_blank', 'width=420,height=600');
-      const item = state.cartItem;
       const currentUser = (typeof AishAuth !== 'undefined') ? AishAuth.getCurrentUser() : null;
       const staffLabel = currentUser ? `${currentUser.name} (${currentUser.role.toUpperCase()})` : 'Kasir Operasional';
+
+      const itemsHtml = items.map((item, idx) => `
+        <div style="margin-bottom: 10px; border-bottom: 1px dotted #888; padding-bottom: 6px;">
+          <div class="bold" style="font-size: 13px;">
+            ${idx + 1}. [ ${item.pax} ${item.unit ? item.unit.replace('/', '').toUpperCase() : 'PAX'} ] ${item.name}
+          </div>
+          ${item.customLauk || item.defaultLauk ? `
+            <div style="font-size: 11px; margin-top: 3px;">
+              <strong>Lauk:</strong> ${(item.customLauk || item.defaultLauk).join(', ')}
+            </div>
+          ` : ''}
+          ${item.notes ? `<div style="font-size: 10.5px; font-style: italic;">Catatan: ${item.notes}</div>` : ''}
+        </div>
+      `).join('');
 
       const html = `
         <!DOCTYPE html>
@@ -1048,9 +1110,8 @@ const AishPOS = (() => {
             body { font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 15px; color: #000; }
             h2, h3 { margin: 2px 0; text-align: center; }
             hr { border: none; border-top: 1px dashed #000; margin: 8px 0; }
-            .row { display: flex; justify-content: space-between; }
+            .row { display: flex; justify-content: space-between; margin-bottom: 2px; }
             .bold { font-weight: bold; }
-            ul { margin: 4px 0 8px 18px; padding: 0; }
           </style>
         </head>
         <body>
@@ -1062,22 +1123,13 @@ const AishPOS = (() => {
           <div class="row"><span>PELANGGAN:</span><span class="bold">${state.customer.name}</span></div>
           <div class="row"><span>LOKASI:</span><span>${state.customer.venue}</span></div>
           <hr/>
-          <div class="bold" style="font-size: 14px; text-transform: uppercase;">
-            [ ${item.pax} PAX ] ${item.name}
-          </div>
-          <p class="bold" style="margin-top: 6px;">KOMPOSISI LAUK & SAJIAN:</p>
-          <ul>
-            ${(item.defaultLauk || []).map(l => `<li>${l}</li>`).join('')}
-          </ul>
-          <hr/>
-          <div class="bold">CATATAN KHUSUS / ALERGI:</div>
-          <div>${item.notes || 'Tidak ada catatan'}</div>
+          <div class="bold" style="margin-bottom: 6px;">DAFTAR MENU PRODUKSI:</div>
+          ${itemsHtml}
           <hr/>
           <div class="bold">COMPLEMENTARY / LOGISTIK:</div>
-          <div>${item.complementary || 'Peralatan standar'}</div>
           <div>Armada Pengiriman: Box 02 (B 9182 PQA)</div>
           <hr/>
-          <div style="text-align: center; font-size: 10px; margin-top: 15px;">
+          <div style="text-align: center; font-size: 10px; margin-top: 12px;">
             Dicetak: ${new Date().toLocaleTimeString('id-ID')} WIB oleh ${staffLabel}
           </div>
         </body>
@@ -1090,18 +1142,25 @@ const AishPOS = (() => {
       showToast('Slip Dapur berhasil dicetak!');
     },
 
-    // Share Invoice via WhatsApp
+    // Share Invoice via WhatsApp (Multi-Item Formatting)
     shareWhatsappInvoice: () => {
-      if (!state.cartItem) {
+      const items = state.cart || [];
+      if (items.length === 0) {
         showToast('Keranjang masih kosong, pilih menu terlebih dahulu!', 'warning');
         return;
       }
       const fin = getFinancials();
+
+      const itemsText = items.map((it, idx) => {
+        const lineTotal = (Number(it.price) || 0) * (Number(it.pax) || 0);
+        return `   ${idx + 1}. *${it.name}* (${it.pax} ${it.unit ? it.unit.replace('/', '') : 'pax'}) = ${formatIDR(lineTotal)}`;
+      }).join('\n');
+
       const text = `*Yth. Bapak/Ibu ${state.customer.name}*,\n\nBerikut ringkasan pesanan & invoice resmi dari *AISH CATERING*:\n\n` +
         `🧾 *No. Invoice:* ${state.invoiceNumber}\n` +
         `📅 *Tanggal Acara:* ${state.customer.date} (${state.customer.time})\n` +
-        `📍 *Lokasi:* ${state.customer.venue}\n` +
-        `🍲 *Paket:* ${state.cartItem.name} (${state.cartItem.pax} Pax)\n` +
+        `📍 *Lokasi:* ${state.customer.venue}\n\n` +
+        `📋 *Rincian Menu Pesanan:*\n${itemsText}\n\n` +
         `💰 *Total Biaya:* ${formatIDR(fin.totalBill)}\n` +
         `💳 *Nominal DP (${state.selectedPaymentTerm.toUpperCase()}):* ${formatIDR(fin.amountDueNow)}\n` +
         `💵 *Sisa Pelunasan:* ${formatIDR(fin.totalBill - fin.amountDueNow)}\n\n` +
@@ -1130,7 +1189,7 @@ const AishPOS = (() => {
     startNewOrder: () => {
       const randomId = Math.floor(100 + Math.random() * 900);
       state.invoiceNumber = `INV-2025/V/${randomId}`;
-      state.cartItem = { ...catalogData[0], pax: 100 };
+      state.cart = [{ ...catalogData[0], pax: 100, customLauk: [...(catalogData[0].defaultLauk || [])] }];
       state.customer = {
         name: 'Pelanggan Baru',
         phone: '0812-XXXX-XXXX',
@@ -1158,8 +1217,12 @@ const AishPOS = (() => {
       state.customer.time = ev.time;
       state.customer.venue = ev.venue;
 
-      const matchedCat = catalogData.find(c => c.name.toLowerCase().includes(ev.package.toLowerCase().slice(0, 10))) || catalogData[0];
-      state.cartItem = { ...matchedCat, pax: ev.pax };
+      if (Array.isArray(ev.items) && ev.items.length > 0) {
+        state.cart = JSON.parse(JSON.stringify(ev.items));
+      } else {
+        const matchedCat = catalogData.find(c => c.name.toLowerCase().includes(ev.package.toLowerCase().slice(0, 10))) || catalogData[0];
+        state.cart = [{ ...matchedCat, pax: ev.pax, customLauk: [...(matchedCat.defaultLauk || [])] }];
+      }
 
       AishPOS.switchView('pos');
       renderCart();
